@@ -7,11 +7,14 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ColorPicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
+
+
 import javafx.scene.control.ToolBar;
 import javafx.scene.image.PixelReader;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
+import static pain.t.fx_2021.PainTFX_2021.tabPane;
 
 
 /**
@@ -28,10 +31,11 @@ public class ToolBarPain extends ToolBar {
     static Color currentColor;
     static Label colorLabel;
        
+       
+        
   
      public ToolBarPain() {
     
-         
          
          
         //Set basic properties of slider like amount of ticks and tick increment
@@ -49,6 +53,7 @@ public class ToolBarPain extends ToolBar {
         Button freeHandButton = new Button("Free Hand Line");
         Button  straightLineButton = new Button("Straight Line");
         Button colorDropperButton = new Button("Color Dropper");
+        
         
         //add buttons, slider, colorpicker to this toolbar object
         this.getItems().addAll(slider, colorPicker, freeHandButton, 
@@ -79,58 +84,76 @@ public class ToolBarPain extends ToolBar {
                 toolbarManager("colorDropper");
             }
         });
+        
     
     
      }
     
      //function that removes any possibly active button tool and adds new tool passed with string x
     static void toolbarManager(String x) {
-
+        
+        TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
+        
         String activeCanvasTool = x;
         //remove all tools
         try {
-            PainTFX_2021.canvas.removeEventHandler(MouseEvent.MOUSE_CLICKED, colorDropperHandler);
+            selectedTab.canvas.removeEventHandler(MouseEvent.MOUSE_CLICKED, colorDropperHandler);
+            //PainTFX_2021.canvas.removeEventHandler(MouseEvent.MOUSE_CLICKED, colorDropperHandler);
         } catch (Exception ex) {
         }
         try {
-            PainTFX_2021.canvas.removeEventHandler(MouseEvent.MOUSE_PRESSED, straightLineHandler1);
+            selectedTab.canvas.removeEventHandler(MouseEvent.MOUSE_PRESSED, straightLineHandler1);
+            //PainTFX_2021.canvas.removeEventHandler(MouseEvent.MOUSE_PRESSED, straightLineHandler1);
+        } catch (Exception ex) {
+        }
+      
+        try {
+            selectedTab.canvas.removeEventHandler(MouseEvent.MOUSE_RELEASED, straightLineHandler2);
+           // PainTFX_2021.canvas.removeEventHandler(MouseEvent.MOUSE_RELEASED, straightLineHandler2);
         } catch (Exception ex) {
         }
         try {
-            PainTFX_2021.canvas.removeEventHandler(MouseEvent.MOUSE_RELEASED, straightLineHandler2);
-        } catch (Exception ex) {
-        }
-        try {
-            PainTFX_2021.canvas.removeEventHandler(MouseEvent.MOUSE_DRAGGED, freeHandHandler);
+            selectedTab.canvas.removeEventHandler(MouseEvent.MOUSE_DRAGGED, freeHandHandler);
+           // PainTFX_2021.canvas.removeEventHandler(MouseEvent.MOUSE_DRAGGED, freeHandHandler);
         } catch (Exception ex) {
         }
 
         //eH for freehand tool
         if (x.equalsIgnoreCase("freeHand")) {
-            PainTFX_2021.canvas.addEventHandler(MouseEvent.MOUSE_DRAGGED, freeHandHandler);
+            selectedTab.canvas.addEventHandler(MouseEvent.MOUSE_DRAGGED, freeHandHandler);
+            //PainTFX_2021.canvas.addEventHandler(MouseEvent.MOUSE_DRAGGED, freeHandHandler);
         }
 
         //eH for straight line tool
         if (x.equalsIgnoreCase("straightLine")) {
-            PainTFX_2021.canvas.addEventHandler(MouseEvent.MOUSE_PRESSED, straightLineHandler1);
-            PainTFX_2021.canvas.addEventHandler(MouseEvent.MOUSE_RELEASED, straightLineHandler2);
+            selectedTab.canvas.addEventHandler(MouseEvent.MOUSE_PRESSED, straightLineHandler1);
+            selectedTab.canvas.addEventHandler(MouseEvent.MOUSE_RELEASED, straightLineHandler2);
+            //PainTFX_2021.canvas.addEventHandler(MouseEvent.MOUSE_PRESSED, straightLineHandler1);
+            //PainTFX_2021.canvas.addEventHandler(MouseEvent.MOUSE_RELEASED, straightLineHandler2);
         }
 
         //eH for color grabber tool
         if (x.equalsIgnoreCase("colorDropper")) {
-            PainTFX_2021.canvas.addEventHandler(MouseEvent.MOUSE_CLICKED, colorDropperHandler);
+            selectedTab.canvas.addEventHandler(MouseEvent.MOUSE_CLICKED, colorDropperHandler);
+            //PainTFX_2021.canvas.addEventHandler(MouseEvent.MOUSE_CLICKED, colorDropperHandler);
         }
+        
         
     }
     
     
     //Event Handlers for Tools
     
+    
+   
  static EventHandler<MouseEvent> freeHandHandler = new EventHandler<MouseEvent>() {
         @Override
         public void handle(MouseEvent e) {
-            PainTFX_2021.gc.setFill(colorPicker.getValue());
-            PainTFX_2021.gc.fillRect(e.getX(), e.getY(), slider.getValue(), slider.getValue());
+            TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
+            selectedTab.gc.setFill(colorPicker.getValue());
+            selectedTab.gc.fillRect(e.getX(), e.getY(), slider.getValue(), slider.getValue());
+            //PainTFX_2021.gc.setFill(colorPicker.getValue());
+            //PainTFX_2021.gc.fillRect(e.getX(), e.getY(), slider.getValue(), slider.getValue());
         }
     };
  
@@ -145,22 +168,36 @@ public class ToolBarPain extends ToolBar {
     static EventHandler<MouseEvent> straightLineHandler2 = new EventHandler<MouseEvent>() {
         @Override
         public void handle(MouseEvent e) {
-            PainTFX_2021.gc.setFill(colorPicker.getValue());
-            PainTFX_2021.gc.setLineWidth(slider.getValue());
-            PainTFX_2021.gc.setStroke(currentColor);
-            PainTFX_2021.gc.strokeLine(lineFirstX, lineFirstY, e.getX(), e.getY());
+            TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
+            selectedTab.gc.setFill(colorPicker.getValue());
+            selectedTab.gc.setLineWidth(slider.getValue());
+            selectedTab.gc.setStroke(currentColor);
+            selectedTab.gc.strokeLine(lineFirstX, lineFirstY, e.getX(), e.getY());
+            //PainTFX_2021.gc.setFill(colorPicker.getValue());
+            //PainTFX_2021.gc.setLineWidth(slider.getValue());
+            //PainTFX_2021.gc.setStroke(currentColor);
+            //PainTFX_2021.gc.strokeLine(lineFirstX, lineFirstY, e.getX(), e.getY());
         }
     };
+    
+    
+    
+    //STILL NEEDS CLEANUP
+    
     
     //select a color from canvas pixel data
     static EventHandler<MouseEvent> colorDropperHandler = new EventHandler<MouseEvent>() {
         @Override
         public void handle(MouseEvent e) {
+            TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
             //all of this just detects the position of the mouse on the canvas
             WritableImage wImage = new WritableImage(
-                    (int) PainTFX_2021.canvas.getWidth(),
-                    (int) PainTFX_2021.canvas.getHeight());
-            PainTFX_2021.canvas.snapshot(null, wImage);
+                   (int) selectedTab.canvas.getWidth(),
+                   (int) selectedTab.canvas.getHeight());
+                   // (int) PainTFX_2021.canvas.getWidth(),
+                   // (int) PainTFX_2021.canvas.getHeight());
+            selectedTab.canvas.snapshot(null, wImage);
+            //PainTFX_2021.canvas.snapshot(null, wImage);
             int x = new Double(e.getX()).intValue();
             int y = new Double(e.getY()).intValue();
             PixelReader r = wImage.getPixelReader();
@@ -187,8 +224,11 @@ public void lengthsliderInit() {
         //special event handler for clicking on the colorPicker, this is not a button
         colorPicker.setOnAction(new EventHandler() {
             public void handle(Event t) {
+                TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
                 currentColor = colorPicker.getValue();
-                PainTFX_2021.gc.setFill(currentColor);
+                selectedTab.gc.setFill(currentColor);
+                //PainTFX_2021.gc.setFill(currentColor);
+                //is colorlabel legacy?
                 colorLabel.setText("You are painting with" + currentColor.toString());
 
             }
