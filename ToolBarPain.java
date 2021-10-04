@@ -7,11 +7,10 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ColorPicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
+import javafx.scene.control.TextField;
 import javafx.scene.control.ToolBar;
-import javafx.scene.image.PixelReader;
-import javafx.scene.image.WritableImage;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
+import static pain.t.fx_2021.PainTFX_2021.tabPane;
 
 
 /**
@@ -23,17 +22,19 @@ public class ToolBarPain extends ToolBar {
     //global variables for painting functionality
     static Slider slider;
     static ColorPicker colorPicker;
-    static Double lineFirstX;
-    static Double lineFirstY;
+    //static Double lineFirstX;
+    //static Double lineFirstY;
     static Color currentColor;
-    static Label colorLabel;
-       
+    static TextField userVertices;
+    static TextField userText;
+
   
      public ToolBarPain() {
     
          
-         
-         
+       // create labels
+        Label sliderLabel = new Label("Select the Draw Width");
+        Label shapesLabel = new Label("Select A Shape to Draw");
         //Set basic properties of slider like amount of ticks and tick increment
         slider = new Slider();
         lengthsliderInit();
@@ -43,133 +44,119 @@ public class ToolBarPain extends ToolBar {
         
         //set default colorpicker data
         currentColor = Color.BLUE;
-        colorLabel = new Label("You are painting with" + currentColor.toString());
+        
+       
         
         //create buttons
         Button freeHandButton = new Button("Free Hand Line");
         Button  straightLineButton = new Button("Straight Line");
         Button colorDropperButton = new Button("Color Dropper");
+        Button eraseButton = new Button("Erase");
+        Button textButton = new Button("Text");
+        Button cutPasteButton = new Button("Cut and Paste");
+        Button circleButton = new Button("Circle");
+        Button squareButton = new Button("Square");
+        Button rectangleButton = new Button("Rectangle");
+        Button rectangleRoundedButton = new Button("Rounded Rectangle");
+        Button ellipseButton = new Button("Ellipse");
+        Button polygonButton = new Button("Polygon");
+        
+        //TextField for user input on polygon length
+        userVertices = new TextField("Enter integer greater than 2 for # of polygon sides");
         
         //add buttons, slider, colorpicker to this toolbar object
-        this.getItems().addAll(slider, colorPicker, freeHandButton, 
-               straightLineButton, colorDropperButton);
-        
+        this.getItems().addAll(sliderLabel,slider, colorPicker, freeHandButton, 
+               straightLineButton, colorDropperButton, eraseButton, textButton, cutPasteButton, shapesLabel, circleButton, squareButton, rectangleButton, 
+               rectangleRoundedButton, ellipseButton, polygonButton, userVertices);
+       
        //default line draw data
-       lineFirstX = 0.0;
-       lineFirstY = 0.0;
+       //lineFirstX = 0.0;
+       //lineFirstY = 0.0;
        //defualt active tool
-       toolbarManager("freeHand");
+       TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
+       ToolBarManager.toolBarManager("freeHand", selectedTab, tabPane, this);
+       ToolBarPain toolBarCopy = this;
         
         //event handlers for clicking on toolBar buttons
         freeHandButton.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent e) {
-                toolbarManager("freeHand");
+                ToolBarManager.toolBarManager("freeHand", selectedTab, tabPane, toolBarCopy);
             }
         });
         straightLineButton.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent e) {
-                toolbarManager("straightLine");
+                ToolBarManager.toolBarManager("straightLine", selectedTab, tabPane, toolBarCopy);
             }
         });
         colorDropperButton.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent e) {
-                toolbarManager("colorDropper");
+                ToolBarManager.toolBarManager("colorDropper", selectedTab, tabPane, toolBarCopy);
             }
         });
-    
-    
-     }
-    
-     //function that removes any possibly active button tool and adds new tool passed with string x
-    static void toolbarManager(String x) {
-
-        String activeCanvasTool = x;
-        //remove all tools
-        try {
-            PainTFX_2021.canvas.removeEventHandler(MouseEvent.MOUSE_CLICKED, colorDropperHandler);
-        } catch (Exception ex) {
-        }
-        try {
-            PainTFX_2021.canvas.removeEventHandler(MouseEvent.MOUSE_PRESSED, straightLineHandler1);
-        } catch (Exception ex) {
-        }
-        try {
-            PainTFX_2021.canvas.removeEventHandler(MouseEvent.MOUSE_RELEASED, straightLineHandler2);
-        } catch (Exception ex) {
-        }
-        try {
-            PainTFX_2021.canvas.removeEventHandler(MouseEvent.MOUSE_DRAGGED, freeHandHandler);
-        } catch (Exception ex) {
-        }
-
-        //eH for freehand tool
-        if (x.equalsIgnoreCase("freeHand")) {
-            PainTFX_2021.canvas.addEventHandler(MouseEvent.MOUSE_DRAGGED, freeHandHandler);
-        }
-
-        //eH for straight line tool
-        if (x.equalsIgnoreCase("straightLine")) {
-            PainTFX_2021.canvas.addEventHandler(MouseEvent.MOUSE_PRESSED, straightLineHandler1);
-            PainTFX_2021.canvas.addEventHandler(MouseEvent.MOUSE_RELEASED, straightLineHandler2);
-        }
-
-        //eH for color grabber tool
-        if (x.equalsIgnoreCase("colorDropper")) {
-            PainTFX_2021.canvas.addEventHandler(MouseEvent.MOUSE_CLICKED, colorDropperHandler);
-        }
+        eraseButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent e) {
+                ToolBarManager.toolBarManager("erase", selectedTab, tabPane, toolBarCopy);
+            }
+        });
+         textButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent e) {
+                ToolBarManager.toolBarManager("text", selectedTab, tabPane, toolBarCopy);
+            }
+        });
+        cutPasteButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent e) {
+                ToolBarManager.toolBarManager("cutPaste", selectedTab, tabPane, toolBarCopy);
+            }
+        });
+        circleButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent e) {
+                ToolBarManager.toolBarManager("circle", selectedTab, tabPane, toolBarCopy);
+            }
+        });
+        squareButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent e) {
+                ToolBarManager.toolBarManager("square", selectedTab, tabPane, toolBarCopy);
+            }
+        });
+        rectangleButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent e) {
+                ToolBarManager.toolBarManager("rectangle", selectedTab, tabPane, toolBarCopy);
+            }
+        });
+        rectangleRoundedButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent e) {
+                ToolBarManager.toolBarManager("rectangleRounded", selectedTab, tabPane, toolBarCopy);
+            }
+        });
+        ellipseButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent e) {
+                ToolBarManager.toolBarManager("ellipse", selectedTab, tabPane, toolBarCopy);
+            }
+        });
+        polygonButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent e) {
+                ToolBarManager.toolBarManager("polygon", selectedTab, tabPane, toolBarCopy);
+            }
+        });
         
-    }
-    
-    
-    //Event Handlers for Tools
-    
- static EventHandler<MouseEvent> freeHandHandler = new EventHandler<MouseEvent>() {
-        @Override
-        public void handle(MouseEvent e) {
-            PainTFX_2021.gc.setFill(colorPicker.getValue());
-            PainTFX_2021.gc.fillRect(e.getX(), e.getY(), slider.getValue(), slider.getValue());
-        }
-    };
- 
- //straight line has start and stop functionality
-    static EventHandler<MouseEvent> straightLineHandler1 = new EventHandler<MouseEvent>() {
-        @Override
-        public void handle(MouseEvent e) {
-            lineFirstX = e.getX();
-            lineFirstY = e.getY();
-        }
-    };
-    static EventHandler<MouseEvent> straightLineHandler2 = new EventHandler<MouseEvent>() {
-        @Override
-        public void handle(MouseEvent e) {
-            PainTFX_2021.gc.setFill(colorPicker.getValue());
-            PainTFX_2021.gc.setLineWidth(slider.getValue());
-            PainTFX_2021.gc.setStroke(currentColor);
-            PainTFX_2021.gc.strokeLine(lineFirstX, lineFirstY, e.getX(), e.getY());
-        }
-    };
-    
-    //select a color from canvas pixel data
-    static EventHandler<MouseEvent> colorDropperHandler = new EventHandler<MouseEvent>() {
-        @Override
-        public void handle(MouseEvent e) {
-            //all of this just detects the position of the mouse on the canvas
-            WritableImage wImage = new WritableImage(
-                    (int) PainTFX_2021.canvas.getWidth(),
-                    (int) PainTFX_2021.canvas.getHeight());
-            PainTFX_2021.canvas.snapshot(null, wImage);
-            int x = new Double(e.getX()).intValue();
-            int y = new Double(e.getY()).intValue();
-            PixelReader r = wImage.getPixelReader();
-            //get color from canvas position
-            currentColor = r.getColor(x, y);
-            colorLabel.setText("You are painting with" + currentColor.toString());
-            colorPicker.setValue(currentColor);
-        }
-    };
+        
+
+        
+        
+        
+     }
 
 //initialize slider data/formating
 public void lengthsliderInit() {
@@ -187,12 +174,15 @@ public void lengthsliderInit() {
         //special event handler for clicking on the colorPicker, this is not a button
         colorPicker.setOnAction(new EventHandler() {
             public void handle(Event t) {
+                TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
                 currentColor = colorPicker.getValue();
-                PainTFX_2021.gc.setFill(currentColor);
-                colorLabel.setText("You are painting with" + currentColor.toString());
-
+                selectedTab.gc.setFill(currentColor);
             }
         });
     }
-
+//get and return text from polygon textfield
+    public String polygonSidesInput(){
+        String userInput = userVertices.getText();
+        return userInput;
+}
 }
