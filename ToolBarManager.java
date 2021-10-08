@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import javafx.event.EventHandler;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.control.TabPane;
+import javafx.scene.control.TextField;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.image.PixelReader;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.KeyEvent;
@@ -39,10 +41,12 @@ public class ToolBarManager {
     static Color backgroundColor = Color.WHITE;
     //default polygon sides
     static int vertices = 6;
+    static String userText;
     //current tool
     static String activeCanvasTool;
     //claries if an operation should change previewCanvas AND Canvas
     static boolean previewDraw = true;
+    static boolean rounded = false;
     //doubles holding information for cutPaste location on canvas
     static Double cutPasteX1;
     static Double cutPasteX2;
@@ -59,6 +63,7 @@ public class ToolBarManager {
         arcWidth = 2.0;
         
         activeCanvasTool = x;
+        PainTFX_2021.logToolChange(x);
         //remove all tools
         //colorDropper
         try {
@@ -96,9 +101,7 @@ public class ToolBarManager {
         }
         //textTool
          try {
-            selectedTab.previewCanvas.removeEventHandler(MouseEvent.MOUSE_PRESSED, textHandler1);
-            selectedTab.previewCanvas.removeEventHandler(MouseEvent.MOUSE_DRAGGED, textHandler2);
-            selectedTab.previewCanvas.removeEventHandler(MouseEvent.MOUSE_RELEASED, textHandler3);
+            selectedTab.previewCanvas.removeEventHandler(MouseEvent.MOUSE_CLICKED, textHandler1);
         } catch (Exception ex) {
         }
          
@@ -137,9 +140,7 @@ public class ToolBarManager {
         
          //eH for texttool
         if (x.equalsIgnoreCase("text")) {
-        selectedTab.previewCanvas.addEventHandler(MouseEvent.MOUSE_PRESSED, textHandler1);
-        selectedTab.previewCanvas.addEventHandler(MouseEvent.MOUSE_DRAGGED, textHandler2);
-        selectedTab.previewCanvas.addEventHandler(MouseEvent.MOUSE_RELEASED, textHandler3);
+        selectedTab.previewCanvas.addEventHandler(MouseEvent.MOUSE_CLICKED, textHandler1);
         }
         //eH for circle tool
         if (x.equalsIgnoreCase("circle")) {
@@ -278,43 +279,30 @@ public class ToolBarManager {
         public void handle(MouseEvent e) {  
             TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
             selectedTab.setClosable(false);
-            selectedTab.previewCanvas.setOnKeyTyped(new EventHandler<KeyEvent>() {
-            @Override
-            public void handle(KeyEvent event) {
-                String a = event.getCharacter();
-                selectedTab.previewContext.strokeText(a, e.getX(), e.getY());
-            }
-        });
-        }
-    };
-     
-     
+             SnapshotParameters params = new SnapshotParameters();
+            params.setFill(Color.TRANSPARENT);         
+            WritableImage image = selectedTab.canvas.snapshot(params, null);
+            selectedTab.undoRedoData.pushChanges(image);
+             TextInputDialog td = new TextInputDialog();
+               
+                td.setTitle("Enter Text for Canvas");
+                td.getDialogPane().setContentText("New Text:");
+                // show the text input dialog
+                td.showAndWait();
+                TextField inputTextField = td.getEditor();
+                userText = (inputTextField.getText());
+                System.out.print(userText);
+                lineFirstX = e.getX();
+                lineFirstY = e.getY();
+                
+                selectedTab.gc.setFill(toolBar.colorPicker.getValue());
+                selectedTab.gc.fillText(userText, lineFirstX, lineFirstY);
+                selectedTab.previewContext.setFill(toolBar.colorPicker.getValue());
+                selectedTab.previewContext.fillText(userText, lineFirstX, lineFirstY);
 
-     
-     
-     //eH for text start position
-     static EventHandler<MouseEvent> textHandler2 = new EventHandler<MouseEvent>() {
-        @Override
-        public void handle(MouseEvent e) {  
-            TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
-            selectedTab.setClosable(false);
-            System.out.println(e.getX());
-            selectedTab.previewCanvas.setOnKeyTyped(new EventHandler<KeyEvent>() {
-            @Override
-            public void handle(KeyEvent event) {
-                String a = event.getCharacter();
-                System.out.print(a);
-                selectedTab.previewContext.strokeText(a, e.getX(), e.getY());
             }
-        });
-        }
-    };
-     //eH for text start position
-     static EventHandler<MouseEvent> textHandler3 = new EventHandler<MouseEvent>() {
-        @Override
-        public void handle(MouseEvent e) {  
-        }
-    };
+        };
+
    
         //eH for recording start position
      static EventHandler<MouseEvent> shapeAndLineStartPosHandler1 = new EventHandler<MouseEvent>() {
@@ -473,25 +461,6 @@ public class ToolBarManager {
       }
     };
       
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
        
      public static void drawTool() {
          
@@ -521,7 +490,9 @@ public class ToolBarManager {
             drawCutPasteRectangle();
             break;
         case "rectangleRounded":
-           drawRectangleRounded();
+           rounded = true;
+           drawRectangle();
+           rounded = false;
             break;
         case "circle":
            drawCircle();
@@ -536,78 +507,46 @@ public class ToolBarManager {
             break;
         }
 }
-     
-    public static void drawCircle(){
+
+     public static void drawCircle(){
          TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
             selectedTab.setClosable(false);
-           
-            double x =currentX;
-            double y = currentY;
-            //Draw circle
+
+            double[] double_array = new double[2];  
+            double_array = DrawMath.mathCircle(lineFirstX, lineFirstY, currentX, currentY);
+            double a = double_array[0];
+            double b = double_array[1];
+            double diameter  = double_array[2];
             
              if (previewDraw == true) {
-                if (Math.abs(lineFirstX - x) > Math.abs(lineFirstY - y)) { //the user dragged more horizontally than vertically
-                    selectedTab.previewContext.fillOval(lineFirstX - Math.abs(lineFirstX - x), lineFirstY - Math.abs(lineFirstX - x),
-                            2 * Math.abs(lineFirstX - x), 2 * Math.abs(lineFirstX - x));
-                    selectedTab.previewContext.strokeOval(lineFirstX - Math.abs(lineFirstX - x), lineFirstY - Math.abs(lineFirstX - x),
-                            2 * Math.abs(lineFirstX - x), 2 * Math.abs(lineFirstX - x));
-                } else { //the user dragged more vertically than horizontally
-                    selectedTab.previewContext.fillOval(lineFirstX - Math.abs(lineFirstY - y), lineFirstY - Math.abs(lineFirstY - y),
-                            2 * Math.abs(lineFirstY - y), 2 * Math.abs(lineFirstY - y));
-                    selectedTab.previewContext.strokeOval(lineFirstX - Math.abs(lineFirstY - y), lineFirstY - Math.abs(lineFirstY - y),
-                            2 * Math.abs(lineFirstY - y), 2 * Math.abs(lineFirstY - y));
-                }
+                    selectedTab.previewContext.fillOval(a, b,diameter, diameter);
+                    selectedTab.previewContext.strokeOval(a, b, diameter, diameter);
+                
              } else {
-                        if (Math.abs(lineFirstX - x) > Math.abs(lineFirstY - y)) { //the user dragged more horizontally than vertically
-                    selectedTab.previewContext.fillOval(lineFirstX - Math.abs(lineFirstX - x), lineFirstY - Math.abs(lineFirstX - x),
-                            2 * Math.abs(lineFirstX - x), 2 * Math.abs(lineFirstX - x));
-                    selectedTab.gc.fillOval(lineFirstX - Math.abs(lineFirstX - x), lineFirstY - Math.abs(lineFirstX - x),
-                            2 * Math.abs(lineFirstX - x), 2 * Math.abs(lineFirstX - x));
-                    selectedTab.previewContext.strokeOval(lineFirstX - Math.abs(lineFirstX - x), lineFirstY - Math.abs(lineFirstX - x),
-                            2 * Math.abs(lineFirstX - x), 2 * Math.abs(lineFirstX - x));
-                    selectedTab.gc.strokeOval(lineFirstX - Math.abs(lineFirstX - x), lineFirstY - Math.abs(lineFirstX - x),
-                            2 * Math.abs(lineFirstX - x), 2 * Math.abs(lineFirstX - x));
-                     selectedTab.copyCanvas();
-            selectedTab.previewCanvas.addEventHandler(MouseEvent.MOUSE_PRESSED, shapeAndLineStartPosHandler1);
-            selectedTab.previewCanvas.addEventHandler(MouseEvent.MOUSE_DRAGGED, shapeAndLineDragHandler1);
-            selectedTab.previewCanvas.addEventHandler(MouseEvent.MOUSE_RELEASED, shapeAndLineReleaseHandler1);
-                } else { //the user dragged more vertically than horizontally
-                    selectedTab.previewContext.fillOval(lineFirstX - Math.abs(lineFirstY - y), lineFirstY - Math.abs(lineFirstY - y),
-                            2 * Math.abs(lineFirstY - y), 2 * Math.abs(lineFirstY - y));
-                    selectedTab.gc.fillOval(lineFirstX - Math.abs(lineFirstY - y), lineFirstY - Math.abs(lineFirstY - y),
-                            2 * Math.abs(lineFirstY - y), 2 * Math.abs(lineFirstY - y));
-                    selectedTab.previewContext.strokeOval(lineFirstX - Math.abs(lineFirstY - y), lineFirstY - Math.abs(lineFirstY - y),
-                            2 * Math.abs(lineFirstY - y), 2 * Math.abs(lineFirstY - y));
-                    selectedTab.gc.strokeOval(lineFirstX - Math.abs(lineFirstY - y), lineFirstY - Math.abs(lineFirstY - y),
-                            2 * Math.abs(lineFirstY - y), 2 * Math.abs(lineFirstY - y));
-                     selectedTab.copyCanvas();
-            selectedTab.previewCanvas.addEventHandler(MouseEvent.MOUSE_PRESSED, shapeAndLineStartPosHandler1);
-            selectedTab.previewCanvas.addEventHandler(MouseEvent.MOUSE_DRAGGED, shapeAndLineDragHandler1);
-            selectedTab.previewCanvas.addEventHandler(MouseEvent.MOUSE_RELEASED, shapeAndLineReleaseHandler1);
-                        }
+                    selectedTab.previewContext.fillOval(a, b,diameter, diameter);
+                    selectedTab.gc.fillOval(a, b,diameter, diameter);
+                    selectedTab.previewContext.strokeOval(a, b,diameter, diameter);
+                    selectedTab.gc.strokeOval(a, b,diameter, diameter);
+                    selectedTab.copyCanvas();
+                    selectedTab.previewCanvas.addEventHandler(MouseEvent.MOUSE_PRESSED, shapeAndLineStartPosHandler1);
+                    selectedTab.previewCanvas.addEventHandler(MouseEvent.MOUSE_DRAGGED, shapeAndLineDragHandler1);
+                    selectedTab.previewCanvas.addEventHandler(MouseEvent.MOUSE_RELEASED, shapeAndLineReleaseHandler1);
+               
     } }
+     
+     
      public static void drawEllipse(){
         TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
             selectedTab.setClosable(false);
-            double upperLeftX;
-            double upperLeftY;
-            double width;
-            double height;
+
+            double[] double_array = new double[4];
             
-            //determine where the upper left bound is set
-            if (lineFirstX > currentX){
-                upperLeftX = currentX;
-            } else {
-                upperLeftX = lineFirstX;
-            }
-            if (lineFirstY > currentY){
-                upperLeftY = currentY;
-            } else {
-                upperLeftY = lineFirstY;
-            }
-            
-            width = Math.abs(lineFirstX - currentX);
-            height = Math.abs(lineFirstY - currentY);
+            double_array = DrawMath.mathRectangle(lineFirstX, lineFirstY, currentX, currentY);
+         
+            double upperLeftX =  double_array[0];
+            double upperLeftY =  double_array[1];
+            double width =  double_array[2];
+            double height =  double_array[3];
             
             if (previewDraw == true) {
             selectedTab.previewContext.strokeOval(upperLeftX,upperLeftY,width, height);
@@ -732,128 +671,62 @@ public class ToolBarManager {
             selectedTab.previewCanvas.addEventHandler(MouseEvent.MOUSE_RELEASED, shapeAndLineReleaseHandler1);
     }  
     }
-
-     
-    public static void drawRectangle(){
+        
+        public static void drawRectangle(){
         TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
             selectedTab.setClosable(false);
+           
+          
+            double[] double_array = new double[4];
             
-            //values passed to gc drawoval functions
-            double upperLeftX;
-            double upperLeftY;
-            double width;
-            double height;
+            double_array = DrawMath.mathRectangle(lineFirstX, lineFirstY, currentX, currentY);
+         
+            double upperLeftX =  double_array[0];
+            double upperLeftY =  double_array[1];
+            double width =  double_array[2];
+            double height =  double_array[3];
             
-            //determine where the upper left bound is set
-            if (lineFirstX > currentX){
-                upperLeftX = currentX;
+        if (previewDraw == true) {
+            if (rounded == true){
+                selectedTab.previewContext.strokeRoundRect(upperLeftX,upperLeftY,width, height,arcWidth * 5, arcWidth * 5);
+                selectedTab.previewContext.fillRoundRect(upperLeftX,upperLeftY,width, height, arcWidth * 5, arcWidth * 5);
             } else {
-                upperLeftX = lineFirstX;
-            }
-            
-            if (lineFirstY > currentY){
-                upperLeftY = currentY;
-            } else {
-                upperLeftY = lineFirstY;
-            }
-            
-            width = Math.abs(lineFirstX - currentX);
-            height = Math.abs(lineFirstY - currentY);
-            
-            
-            if (previewDraw == true) {
-             selectedTab.previewContext.strokeRect(upperLeftX,upperLeftY,width, height);
+            selectedTab.previewContext.strokeRect(upperLeftX,upperLeftY,width, height);
             selectedTab.previewContext.fillRect(upperLeftX,upperLeftY,width, height);
+            }
         } else {
+             if (rounded == true){
+            selectedTab.gc.strokeRoundRect(upperLeftX,upperLeftY,width, height,arcWidth * 5, arcWidth * 5);
+            selectedTab.gc.fillRoundRect(upperLeftX,upperLeftY,width, height, arcWidth * 5, arcWidth * 5);
+            selectedTab.previewContext.strokeRoundRect(upperLeftX,upperLeftY,width, height,arcWidth * 5, arcWidth * 5);
+            selectedTab.previewContext.fillRoundRect(upperLeftX,upperLeftY,width, height, arcWidth * 5, arcWidth * 5);
+             } else {
             selectedTab.gc.strokeRect(upperLeftX,upperLeftY,width, height);
             selectedTab.gc.fillRect(upperLeftX,upperLeftY,width, height);
             selectedTab.previewContext.strokeRect(upperLeftX,upperLeftY,width, height);
             selectedTab.previewContext.fillRect(upperLeftX,upperLeftY,width, height);
+           
+             }
             selectedTab.copyCanvas();
             selectedTab.previewCanvas.addEventHandler(MouseEvent.MOUSE_PRESSED, shapeAndLineStartPosHandler1);
             selectedTab.previewCanvas.addEventHandler(MouseEvent.MOUSE_DRAGGED, shapeAndLineDragHandler1);
             selectedTab.previewCanvas.addEventHandler(MouseEvent.MOUSE_RELEASED, shapeAndLineReleaseHandler1);
     }  
     }
-   
-    public static void drawRectangleRounded(){
-        TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
-            selectedTab.setClosable(false);
-            //values passed to gc drawoval functions
-            double upperLeftX;
-            double upperLeftY;
-            double width;
-            double height;
-            
-            //determine where the upper left bound is set
-            if (lineFirstX > currentX){
-                upperLeftX = currentX;
-            } else {
-                upperLeftX = lineFirstX;
-            }
-            
-            if (lineFirstY > currentY){
-                upperLeftY = currentY;
-            } else {
-                upperLeftY = lineFirstY;
-            }
-            
-            width = Math.abs(lineFirstX - currentX);
-            height = Math.abs(lineFirstY - currentY);
-            
-            
-            if (previewDraw == true) {
-             selectedTab.previewContext.strokeRoundRect(upperLeftX,upperLeftY,width, height,arcWidth * 5, arcWidth * 5);
-            selectedTab.previewContext.fillRoundRect(upperLeftX,upperLeftY,width, height, arcWidth * 5, arcWidth * 5);
-        } else {
-             selectedTab.gc.strokeRoundRect(upperLeftX,upperLeftY,width, height,arcWidth * 5, arcWidth * 5);
-            selectedTab.gc.fillRoundRect(upperLeftX,upperLeftY,width, height, arcWidth * 5, arcWidth * 5);
-            selectedTab.previewContext.strokeRoundRect(upperLeftX,upperLeftY,width, height,arcWidth * 5, arcWidth * 5);
-            selectedTab.previewContext.fillRoundRect(upperLeftX,upperLeftY,width, height, arcWidth * 5, arcWidth * 5);
-            selectedTab.copyCanvas();
-            selectedTab.previewCanvas.addEventHandler(MouseEvent.MOUSE_PRESSED, shapeAndLineStartPosHandler1);
-            selectedTab.previewCanvas.addEventHandler(MouseEvent.MOUSE_DRAGGED, shapeAndLineDragHandler1);
-            selectedTab.previewCanvas.addEventHandler(MouseEvent.MOUSE_RELEASED, shapeAndLineReleaseHandler1);
-            
-            
-            
-            }    
-    }  
+    
             
             
             
             
     public static void drawPolygon(){
-        TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
+            TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
             selectedTab.setClosable(false);
+            
+            ArrayList<double[]> double_array_list = new ArrayList<>();
+            double_array_list = DrawMath.mathPolygon(lineFirstX, lineFirstY, currentX, currentY, vertices);
+            double[] xValues = double_array_list.get(0);
+            double[] yValues= double_array_list.get(1);
 
-             ArrayList<Double> list = new ArrayList<>(); //list for points
-        double theta; //angle in radians between the current point and the positive x axis
-        double x = currentX;
-        double y = currentY;
-        
-            theta = Math.atan((lineFirstY - y) / (lineFirstX - x)); //theta is the inverse tangent of y component of the radius and the x component
-            if (x < lineFirstX) { //if the user dragged left, adjust theta appropriately
-                theta -= Math.PI;
-            }
-        
-        double radius = Math.sqrt((lineFirstX - x) * (lineFirstX - x) + (lineFirstY - y) * (lineFirstY - y));
-        for (int i = 0; i < vertices; i++) {
-            list.add(radius * Math.cos(theta) + lineFirstX);//add x point
-            list.add(radius * Math.sin(theta) + lineFirstY);//add y point
-            theta += (2 * Math.PI) / vertices; //increase theta
-        }
-        
-        
-                //get x and y valuse of coordinates for polygon
-                double[] xValues = new double[vertices];
-                for (int i = 0; i < vertices; i++) {
-                    xValues[i] = list.get(i * 2);
-                }
-                double[] yValues = new double[vertices];
-                for (int i = 0; i < vertices; i++) {
-                    yValues[i] = list.get(i * 2 + 1);
-                }
                 //draw polygon
 
                 if (previewDraw == true) {
@@ -870,6 +743,7 @@ public class ToolBarManager {
             selectedTab.previewCanvas.addEventHandler(MouseEvent.MOUSE_RELEASED, shapeAndLineReleaseHandler1);
         }
     }  
+    
     public static void drawStraightLine(){
         TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
         if (previewDraw == true) {

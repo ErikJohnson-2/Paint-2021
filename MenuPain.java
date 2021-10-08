@@ -43,12 +43,12 @@ public class MenuPain extends MenuBar{
     
     //THIS CLASS CONTAINS CODE FOR CREATING A MENU AND EVENT HANDLERS FOR ALL MENU ITEMS
     //public static final String APP_ICON = "http://icons.iconarchive.com/icons/deleket/soft-scraps/128/Zoom-icon.png";
+    // public static final String CLOSE_ICON = "http://icons.iconarchive.com/icons/deleket/soft-scraps/24/Button-Close-icon.png";
   public static final String ZOOM_RESET_ICON = "http://icons.iconarchive.com/icons/deleket/soft-scraps/24/Zoom-icon.png";
   public static final String ZOOM_OUT_ICON = "http://icons.iconarchive.com/icons/deleket/soft-scraps/24/Zoom-Out-icon.png";
   public static final String ZOOM_IN_ICON = "http://icons.iconarchive.com/icons/deleket/soft-scraps/24/Zoom-In-icon.png";
- // public static final String CLOSE_ICON = "http://icons.iconarchive.com/icons/deleket/soft-scraps/24/Button-Close-icon.png";
-    
-  
+ 
+
   
   
   
@@ -60,7 +60,7 @@ public class MenuPain extends MenuBar{
     Menu exit = new Menu("Close Pain(t)");
     Menu help = new Menu("Help");
     Menu undoRedo = new Menu("Undo/Redo");
-   
+    Menu autoSave = new Menu("AutoSave");
     
     // intialize menuitems for Menus
     MenuItem open1 = new MenuItem("Open File In Current Tab");
@@ -84,6 +84,8 @@ public class MenuPain extends MenuBar{
     MenuItem about1 = new MenuItem("About");
     MenuItem support1 = new MenuItem("Online Support");
     MenuItem release1 = new MenuItem("Release Notes");
+    
+    MenuItem autoSave1 = new MenuItem("Change Timer Length");
        
     // add menu items to file menu
     file.getItems().add(open1);
@@ -112,16 +114,47 @@ public class MenuPain extends MenuBar{
     //add menu items to exit menu
     exit.getItems().add(exit1);
     
+    //add menu items to autosave menu
+    autoSave.getItems().add(autoSave1);
+    
     // add menus to this menubar object
     this.getMenus().add(file);
     this.getMenus().add(image);
     this.getMenus().add(undoRedo);
+    this.getMenus().add(autoSave);
     this.getMenus().add(help);
     this.getMenus().add(exit);
     
     //EVENT HANDLERS BELOW
     
-    
+    //eH for AutoSave Timer change
+    autoSave1.setOnAction(new EventHandler<ActionEvent>() {
+    @Override
+            public void handle(ActionEvent e) {
+                //popup a dialog that the user can input data to
+                double inputTimer = 5000;
+
+                // create a text input dialog
+                TextInputDialog td = new TextInputDialog();
+               
+                td.setTitle("Change Timer Length in Whole Numbers");
+                td.getDialogPane().setContentText("New Timer Length:");
+                // show the text input dialog
+                td.showAndWait();
+                TextField inputTimerField = td.getEditor();
+                try{
+                inputTimer = Double.valueOf(inputTimerField.getText());
+                System.out.print(inputTimer);
+                TabPain.timerLoop = (int) inputTimer;
+                TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
+                selectedTab.timer.cancel();
+                selectedTab.birthTimer();
+                } catch (Exception d) {
+                    
+                }
+               
+            }
+    });
     //eH for Undo, push selected tab's canvas to redo and pop from undo
     undoMenuItem.setOnAction(new EventHandler<ActionEvent>() {
       @Override
@@ -254,15 +287,40 @@ public class MenuPain extends MenuBar{
                     Optional<ButtonType> result = alert.showAndWait();
                     if (result.get() == buttonTypeOne){
                     // ... user chose "Eh Just Close"
+                    PainTFX_2021.timerEnd = true;
+                    for (Tab var : tabPane.getTabs() ) { 
+                         TabPain thisTab = (TabPain) var;
+                         thisTab.timerEnd = true;
+                         thisTab.timer.cancel();
+                    
+                    }
                     Platform.exit();
                     } else if (result.get() == buttonTypeTwo) {
                      // user chose "Ugh. Close"
+                     PainTFX_2021.timerEnd = true;
+                     
+                    for (Tab var : tabPane.getTabs() ) { 
+                         TabPain thisTab = (TabPain) var;
+                         thisTab.timerEnd = true;
+                         thisTab.timer.cancel();
+                    
+                    }
+                     
+                     
+                     
                      Platform.exit();
                     } else {
                      // user chose "Cancel" or closed the dialog
                     }
                 //the tabs logged no changes
                 } else {
+            for (Tab var : tabPane.getTabs() ) { 
+                         TabPain thisTab = (TabPain) var;
+                         thisTab.timerEnd = true;
+                         thisTab.timer.cancel();
+                    
+                    }
+                    PainTFX_2021.timerEnd = true;
                     Platform.exit();
                 }  
             }
@@ -381,7 +439,7 @@ public class MenuPain extends MenuBar{
               }
                 
                 System.out.print("that worked");
-                
+                //this is not extendable!!
                 location = "/I:/cs250/Pain(t)FX_2021/MA.jpg";
                 
                
@@ -447,8 +505,10 @@ public class MenuPain extends MenuBar{
                             ImageIO.write(SwingFXUtils.fromFXImage(wImage,
                                     null), extension, outFile);
                             selectedTab.setClosable(true);
+                            PainTFX_2021.logSave(true);
                         } catch (IOException ex) {
                             System.out.println(ex.getMessage());
+                            PainTFX_2021.logSave(false);
                         } 
                 }
             }
@@ -474,6 +534,7 @@ public class MenuPain extends MenuBar{
                             "png", outFile);
                      
                      selectedTab.setClosable(true);
+                     PainTFX_2021.logSave(true);
                 } catch (Exception ex) {
                     //error message dialog box
                     Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -482,7 +543,7 @@ public class MenuPain extends MenuBar{
                 String s = "Try using save as first, no file name or directory has been set";
                 alert.setContentText(s);
                 alert.show();
-                   
+                PainTFX_2021.logSave(false);
                 }
             //}
             }
@@ -587,9 +648,14 @@ public class MenuPain extends MenuBar{
             public void handle(ActionEvent e) {
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
                 alert.setTitle("Using Paint(t)");
-                alert.setHeaderText("Information Alert");
-                String s = "Open and Save images in File Menu. Modify image with tools in toolbar. "
-                        + "Change the line length with the slider and the line color with the Color Chooser."
+                alert.setHeaderText("Basic Guide");
+                String s = "This application provides a variety of tools and file settings"
+                        + "\n" + "to produce and save user generated/edited images."
+                        + "\n" + "Use Icons and  their tooltips to select tools." 
+                        + "\n" +"Each tab has its own image and file location."
+                        + "\n" +"If you forget to save, check the Paint Folder for an Autosave."
+                        + "\n" +"Further information about saves can be found in the logs."
+                        + "\n" +"The Auto-Save timer can be modified depending on how often you want changes saved."
                         + "";
                 alert.setContentText(s);
                 alert.show();
