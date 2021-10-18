@@ -1,0 +1,11 @@
+Feature- Grid Lines
+
+Menu Option that toggles an overlay grid composed of thinly lined squares. 
+
+The grid should be derived from the dimensions of the scrollpane window and not
+
+the dimensions of the image. This means you can zoom in or out but the grid is not zoomed.
+
+This could be implemented by drawing the lines on the preview canvas.
+
+The feature should ideally also have some x & y axis labels/tickmarks.

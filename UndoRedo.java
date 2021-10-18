@@ -9,7 +9,7 @@ import java.util.Stack;
 import javafx.scene.image.WritableImage;
 
 /**
-* <h1>UndoRedo</h1>
+* <h1>Maintains stacks to revert canvas changes</h1>
 * Creates two stacks for a Tab
 * Provides methods for push and pop
 *
@@ -23,7 +23,10 @@ public class UndoRedo {
      final Stack<WritableImage> redoStack ;
      final Stack<WritableImage> undoStack ; 
     
-public UndoRedo (){
+    /**
+     *
+     */
+    public UndoRedo (){
         this.undoStack = new Stack<>();
         this.redoStack = new Stack<>();
     
@@ -80,8 +83,9 @@ public void pushRedo(WritableImage image) {
 /**
 * Push image data to undo
      * @param image Writable Image from redo or ChangesMade
-     * @deprecated This is identical to pushChanges?
+     
 */ 
+//shouldn't this be deprecated/refactored?
 public void pushUndo(WritableImage image) {   
         //take canvas data
         //push data to undo 

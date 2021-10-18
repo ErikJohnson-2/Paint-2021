@@ -2,10 +2,15 @@
 package pain.t.fx_2021;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.SnapshotParameters;
@@ -21,7 +26,7 @@ import javax.imageio.ImageIO;
 
 
 /**
-* <h1>TabPain</h1>
+* <h1>Extends Tab to handle a modifiable canvas and auto-save timer</h1>
 * Extension of Tab with variables for canvas data,
 * file data, zoom data, undo data, and timer data.
 * Methods deal with saving/updating canvas and timer.
@@ -41,27 +46,24 @@ public class TabPain extends Tab {
     GraphicsContext previewContext;
     Canvas canvas;
     Canvas previewCanvas;
-    boolean modifiedSinceSaved;
+    boolean modifiedSinceSaved = false;
     Scale zoomScale;
     int currentZoom = 1;
     UndoRedo undoRedoData;
     Timer timer;
     Boolean timerEnd = false;
     static int timerLoop = 5000;
-    File file;
+    File file; 
     
     
-    
-    
-    
-    /**
+/**
 * Constructor for Tab takes no arguments. 
 * Initializes blank canvas, ScrollPane, and timer.
 * Calls birthTimer.
 *
 */
     
-    public TabPain (){
+    public TabPain () {
         //throw an error if user tries to save before using the filefinder dialogue
         fileDest = "null";
         undoRedoData = new UndoRedo();
@@ -71,7 +73,17 @@ public class TabPain extends Tab {
         canvas = new Canvas(imageWidth, imageHeight);
         gc = canvas.getGraphicsContext2D();
         previewCanvas = new Canvas(imageWidth, imageHeight);
-        previewContext = previewCanvas.getGraphicsContext2D();
+        previewContext = previewCanvas.getGraphicsContext2D();  
+        
+        try {
+            String data = "";
+            data = new String(Files.readAllBytes(Paths.get(System.getProperty("user.dir")+ File.separator+ "AutoSaves" + File.separator + "Timer.txt")));
+            double inputTimer = Double.valueOf(data);
+            timerLoop = (int) inputTimer;
+            
+        } catch (IOException ex) {
+            Logger.getLogger(TabPain.class.getName()).log(Level.SEVERE, null, ex);
+        }
         
         //initialize scrollpane
         sp = new ScrollPane();
@@ -85,13 +97,12 @@ public class TabPain extends Tab {
         sp.autosize();
         this.setContent(sp);
         SimpleDateFormat format = new SimpleDateFormat("M-d_HHmmss"); 
-         file = new File("tempfile" + format.format(Calendar.getInstance().getTime())+".png");
+        file = new File(System.getProperty("user.dir")+ File.separator+ "AutoSaves" + File.separator + "tempfile" + format.format(Calendar.getInstance().getTime())+".png");
         birthTimer();
         
         
     }
     
-    //creates a new canvas out of an image for the current tabs scrollpane
 /**
 * Creates a new canvas out of an image to display in tab
      * @param imageW Double with width of passed image
@@ -162,6 +173,7 @@ public class TabPain extends Tab {
 * Auto-save instanced to each Tab
 * Called by BirthTimer
 * 
+     * @return 
 */
 public boolean autoSaveCanvas() {
     SnapshotParameters params = new SnapshotParameters();
@@ -176,9 +188,8 @@ public boolean autoSaveCanvas() {
 }
 /**
 * Begins autoSave timer thread 
-* Do not call this function without
-* killing previous timer.
-* Currently is not killed by any exit functionality.
+* Do not call this function without killing previous timer.
+* Is killed by exit functionality
 * @see autoSaveCanvas
 * 
 */
@@ -192,7 +203,7 @@ public void birthTimer (){
              //save
              Platform.runLater(() -> {
                 
-            
+            //##change timer text to saving...?
                 if (timerEnd == true) {
                 timer.cancel();
                 } else {
@@ -201,12 +212,13 @@ public void birthTimer (){
                         //cludge to make logRecord that it went to autosave
                         String saveDest = fileDest;
                         fileDest = file.toString();
-                        PainTFX_2021.logSave(true);
+                        PainTFX_2021.logThread.logSave(true);
                         fileDest = saveDest;  
                         } else {
-                            PainTFX_2021.logSave(false);
+                              PainTFX_2021.logThread.logSave(false);
                         }
             }  
+                PainTFX_2021.timerStart(timerLoop);
                 });
             }
                      

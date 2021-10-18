@@ -1,0 +1,12 @@
+There were three major techincal debt cleanup operations on this sprint.
+
+First, the files had to be restructured so that autosaves and icons had a dedicated folder.
+The project files were getting overly cluttered, to the point that it was difficult to track autosaves.
+
+Second, ToolBarPain needed to be adjusted to reduce the amount of clutter in the constructor.
+This was achieved by moving setToolTips  and setIcons to their own methods in the class.
+
+Third, there was a dangerous arrangement for file Save/Open event handlers.
+These handlers were all performed functionality seperately, even though they shared
+many identical behaviors. They were compiled into calls for a OpenAndSaveMethods class.
+This will also reduce overhead for updating the file functionality for things like transparency.
