@@ -1,0 +1,338 @@
+Pain(t) Version 2.0.0 - 11/19/2021
+Author: Erik Johnson
+
+## Final Release ##
+
+
+New features:
+ 
+ * UML files on Github
+
+ * Javadoc on Github
+
+ * New icons for circle and rounded rectangle
+
+ * Consolidated system.print and logger calls to new loggingThread
+
+ * Fixed redo undo bug that required multiple click
+
+ * Fixed user timer to a minimum autosave timer of 1 second and changed input format to seconds from milliseconds
+
+ * Timer cannot start up at less than 1 second
+
+Known issues:
+
+ * Save pathing had unexpected permission difficulties, decided to ask users to use save as 
+	if they aren't modifying a previously opened or saved file.
+
+ * Resize and Zoom dont always behave as desired
+
+ * Icons and Tooltips could be bigger/resizable
+
+ * Text Tool is simple
+
+Links:
+
+    * https://youtu.be/AAQ41d-ZUwQ * https://github.com/ErikJohnson-2/Paint-2021
+
+
+#####
+
+
+Pain(t) Version 1.5.0 - 10/16/2021
+Author: Erik Johnson
+
+New features:
+
+ * Cleaner File Structure with Icon and AutoSaves in own folders
+
+ * Persistant Timer Length Setting (Add lower bound to prevent self-destruction?)
+
+ * Logging is threaded (New class LoggingThread)
+
+ * Tool Indicator 
+ 
+ * Unsaved Changes indicator (DOES NOT consider autosaves true saves)
+
+ * Select-Copy-Paste implemented
+
+ * Created methods in Menu for setToolTips and setIcons
+
+ * Moved file Save/Open methods from PainTFX and MenuPain to OpenAndSaveMethods class
+
+ * Timer visible to User, hide at will
+
+ * Javadoc
+
+Known issues:
+
+ * Save pathing had unexpected permission difficulties, decided to ask users to use save as 
+	if they aren't modifying a previously opened or saved file.
+
+ * Resize and Zoom dont always behave as desired
+
+ * Icons and Tooltips could be bigger/resizable
+
+ * Text Tool is simple
+
+Expected Features:
+
+  * JustStroke Draw Option
+
+  * Transparency Handling, without data loss risks when saving from transparant to non-transparant
+
+Links:
+
+  * https://github.com/ErikJohnson-2/Paint-2021
+
+
+#####
+
+
+
+
+Pain(t) Version 1.4.0 - 10/07/2021
+Author: Erik Johnson
+
+New features:
+
+  * Logging capability added to record saving (succesful or not) and tool changes
+
+  * Threaded auto-save timer paired to Tab, modifiable by user and closes with program
+
+  * Icons and MouseOver Tooltips added to Tools
+
+  * Some (50%) Javadoc commenting
+
+  * Text Tool! 
+
+  * 3 Unit Tests (Draw Math)
+
+  * Updated Help (Youtube videos + In Program)
+
+
+Known issues:
+
+ * Save pathing had unexpected permission difficulties, decided to ask users to use save as 
+	if they aren't modifying a previously opened or saved file.
+
+ * Resize and Zoom dont always behave as desired
+
+ * Icons and Tooltips could be bigger/resizable
+
+ * Text Tool is simple
+
+Expected next sprint:
+
+  * Timer visible to User, hide at will, timer setting persistance
+
+  * Cleaner file structure for autosaves and resources
+
+  * TabChanged(True?) visible to user
+
+  * JustStroke Draw Option
+
+  * Transparency Handling, without data loss risks when saving from transparant to non-transparant
+
+Links:
+
+  * https://youtu.be/HFjoSMA_vVY * https://github.com/ErikJohnson-2/Paint-2021
+
+
+#####
+
+Pain(t) Version 1.3.0 - 10/03/2021
+Author: Erik Johnson
+
+New features:
+
+  * Keyboard UI controls for ZoomIn/Out (o for out, i for in)
+
+  * Undo/Redo with abstract data type "stack"
+
+  * Multiple file options for tab includes blank canvas and preset image
+
+  * Rounded Rectangle
+
+  * Polygon with user input for sides
+
+  * Eraser Tool
+
+  * Live Draw
+
+  * Cut and Paste!
+
+Known issues:
+
+ * Save pathing had unexpected permission difficulties, decided to ask users to use save as 
+	if they aren't modifying a previously opened or saved file.
+
+Expected next sprint:
+
+  * Text tool
+
+  * JustStroke Draw Option
+
+  * Icons for Buttons/Menu Items
+
+  * Transparency Handling, without data loss risks when saving from transparant to non-transparant
+
+  * at least 3 unit tests.  
+
+  * have a timer that allows for "autosave"
+
+  * have some JavaDoc commenting.  (More info on this coming, also)
+
+  * have icons for tools
+
+  * have updated help
+
+  * have mouseover help for controls
+
+  * logging capability
+
+Links:
+
+  * No Youtube Link This Week * https://github.com/ErikJohnson-2/Paint-2021
+
+######
+
+Pain(t) Version 1.1.5 - 9/23/2021
+Author: Erik Johnson
+
+New features:
+
+  * Draw a square, a rectangle, an ellipse, and a circle, with fill
+
+  * "Smart" save prevents users from closing application and losing changes
+
+  * 3 image file types for open and save.
+
+  * Keyboard UI controls (control S/Save, alt F/File menu)
+
+  * Image menu to resize canvas and its image.
+
+  * Tabs that behave like their own instances, menu has options for opening images
+    in new tab or in current tab. Can also open new blank tab
+ 
+  * Help Menu has Popup Release Notes
+  
+  * Label for Slider
+
+  * Class for ToolbarManager
+
+Known issues:
+
+ * Save pathing had unexpected permission difficulties, decided to ask users to use save as 
+	if they aren't modifying a previously opened or saved file.
+
+Expected next sprint:
+
+  * Text tool
+
+  * getter and setter for selectedTab file info
+
+  * Zoom
+
+  * Draw Previews
+
+  * JustStroke Draw Option
+
+  * Default Image Library in source packages
+
+  * Icons for Buttons/Menu Items
+
+  * Transparency Handling, without data loss risks when saving from transparant to non-transparant
+
+  * Undo using a stack (not the built in library for images, but rather the general abstract/data type)
+
+Links:
+
+  * https://youtu.be/EN9vIy3C-lI * https://github.com/ErikJohnson-2/Paint-2021
+
+Pain(t) Version 1.1.0 - 9/15/2021
+Author: Erik Johnson
+
+New features:
+
+  * Image/ImageView converted to Canvas with Graphics Context
+
+  * "Save" and "Save As" to File for images opened/drawn on canvas
+
+  * Canvas resizes to fit images, but UI does not resize properly to maximise usability
+
+  * "Free Hand" and "Geometric Line" tools to draw on canvas
+
+  * Color Selection Panel tool changes line draw color
+  
+  * Slider tool changes width of line draw
+
+  * Color Dropper tool selects a color from the canvas for the line draw
+
+  * HBox and Scrollpane layout combined with a Vbox to keep menu always visible
+
+  * Help Menu with usage info, online support info, and general about info
+
+  * Extensive Commenting
+
+  * New custom class ToolBarPain to encapsulate tools and their associated methods/listeners.
+
+  * Global variables reduced and made static
+
+  * Fixed image bug that set canvas width and height to image width and...image width.
+
+Known issues:
+
+  * Save pathing had unexpected permission difficulties, decided to ask users to use save as 
+	if they aren't modifying a previously opened or saved file.
+
+
+Expected next sprint:
+
+  * Default Image Library in source packages
+
+  * Icons for Buttons/Menu Items
+
+  * Access to Release Notes (Not just through github!)
+
+Links:
+
+  * https://youtu.be/aZ73xT2BR7w * https://github.com/ErikJohnson-2/Paint-2021
+
+
+Pain(t) Version 1.0.0 - 9/10/2021
+
+New features:
+
+  * Opened new JavaFX application in NetBeans with JDK 1.8 
+
+  * ScrollPane for image and Vbox for general layout
+
+  * MenuBar with menu items for open file and exit
+
+  * Listener for menu items
+  
+  * FileChooser for opening image; extension filter with "try catch" to prevent errors
+
+  * New MenuBar class called MenuPain for encapsulation (and future inheritance?)
+
+Known issues:
+
+  * Unknown if FileNotFound works properly, can't get program to break
+
+  * Menu can be hidden in the scrollpane, might need to add another layer of VBox
+
+Expected next sprint:
+
+  * Canvas instead of Image  * Resize Image
+
+Links:
+
+  * https://www.youtube.com/watch?v=lQRhxPnVNko  * Github (Not Uploaded Yet)
+
+Relevant Documentation for JavaFx
+
+https://docs.oracle.com/javafx/2/ui_controls/file-chooser.htm
+http://tutorials.jenkov.com/javafx/menubar.html#adding-a-menubar-to-the-scene-graph
+https://docs.oracle.com/javase/8/javafx/graphics-tutorial/image_ops.htm
+https://docs.oracle.com/javase/8/javafx/api/javafx/scene/image/ImageView.html

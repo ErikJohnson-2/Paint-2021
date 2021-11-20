@@ -13,14 +13,20 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.image.PixelReader;
 import javafx.scene.image.WritableImage;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 
 
 /**
- *
- * @author Erik
+ <h1>Event Handlers for drawing tools</h1>
+* Implementation of event handlers for ToolBarPain tools.
+* Variables primarily cover pathing such as starting and current position.
+* Some variables are defaults for drawing functionality.
+* Relies heavily on passing data to GraphicsContext methods.
+*
+* @author  Erik Johnson
+* @version 1.5
+* @since   2021-10-16
  */
 public class ToolBarManager {
     //data for these three layout nodes is passed when toolBarManager is called.
@@ -47,6 +53,7 @@ public class ToolBarManager {
     //claries if an operation should change previewCanvas AND Canvas
     static boolean previewDraw = true;
     static boolean rounded = false;
+     static boolean copyPasteOn = false;
     //doubles holding information for cutPaste location on canvas
     static Double cutPasteX1;
     static Double cutPasteX2;
@@ -55,6 +62,15 @@ public class ToolBarManager {
     //image that is being cut and paste
     static WritableImage cutPasteImage;
     //function that removes any possibly active button tool and adds new tool passed with string x
+
+    /**
+     * Constructor for ToolBarManager.
+     * Primarily removes and adds event handlers from the canvas of the selected tab
+     * @param x String with name of tool selected by user
+     * @param selectedTabPass TabPain that is being modified
+     * @param tabPanePass TabPane parent of current TabPain
+     * @param toolBarPass ToolBarPain
+     */
     public static void toolBarManager(String x, TabPain selectedTabPass, TabPane tabPanePass, ToolBarPain toolBarPass) {
         
         tabPane = tabPanePass;
@@ -63,7 +79,7 @@ public class ToolBarManager {
         arcWidth = 2.0;
         
         activeCanvasTool = x;
-        PainTFX_2021.logToolChange(x);
+         PainTFX_2021.logThread.logToolChange(x);
         //remove all tools
         //colorDropper
         try {
@@ -89,7 +105,7 @@ public class ToolBarManager {
             selectedTab.previewCanvas.removeEventHandler(MouseEvent.MOUSE_DRAGGED, freeHandHandler2);
         } catch (Exception ex) {
         }
-        //cutPaste
+        //cutPaste && copyPaste
          try {
              selectedTab.previewCanvas.removeEventHandler(MouseEvent.MOUSE_PRESSED, shapeAndLineStartPosHandler1 );
             selectedTab.previewCanvas.removeEventHandler(MouseEvent.MOUSE_DRAGGED, shapeAndLineDragHandler1);
@@ -97,6 +113,7 @@ public class ToolBarManager {
            selectedTab.previewCanvas.removeEventHandler(MouseEvent.MOUSE_PRESSED, cutPasteStartHandler2);
            selectedTab.previewCanvas.removeEventHandler(MouseEvent.MOUSE_DRAGGED,cutPasteDragHandler2);
            selectedTab.previewCanvas.removeEventHandler(MouseEvent.MOUSE_RELEASED, cutPasteReleaseHandler2);
+           copyPasteOn = false;
         } catch (Exception ex) {
         }
         //textTool
@@ -131,6 +148,13 @@ public class ToolBarManager {
            selectedTab.previewCanvas.addEventHandler(MouseEvent.MOUSE_PRESSED, shapeAndLineStartPosHandler1 );
             selectedTab.previewCanvas.addEventHandler(MouseEvent.MOUSE_DRAGGED, shapeAndLineDragHandler1);
             selectedTab.previewCanvas.addEventHandler(MouseEvent.MOUSE_RELEASED, cutPasteReleaseHandler1);
+        } 
+        //eH for cutPaste tool
+        if (x.equalsIgnoreCase("copyPaste")) {
+           selectedTab.previewCanvas.addEventHandler(MouseEvent.MOUSE_PRESSED, shapeAndLineStartPosHandler1 );
+            selectedTab.previewCanvas.addEventHandler(MouseEvent.MOUSE_DRAGGED, shapeAndLineDragHandler1);
+            selectedTab.previewCanvas.addEventHandler(MouseEvent.MOUSE_RELEASED, cutPasteReleaseHandler1);
+            copyPasteOn = true;
         } 
         //eH for erasetool
         if (x.equalsIgnoreCase("erase")) {
@@ -187,6 +211,8 @@ public class ToolBarManager {
             
             TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
             selectedTab.setClosable(false);
+            selectedTab.modifiedSinceSaved = true;
+            ToolBarPain.checkTabChanges();
             SnapshotParameters params = new SnapshotParameters();
             params.setFill(Color.TRANSPARENT);         
             WritableImage image = selectedTab.canvas.snapshot(params, null);
@@ -212,6 +238,8 @@ public class ToolBarManager {
             
             TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
             selectedTab.setClosable(false);
+            selectedTab.modifiedSinceSaved = true;
+            ToolBarPain.checkTabChanges();
             selectedTab.gc.setStroke(toolBar.colorPicker.getValue());
             selectedTab.gc.lineTo(e.getX(), e.getY());
             selectedTab.gc.stroke();
@@ -248,6 +276,8 @@ public class ToolBarManager {
         public void handle(MouseEvent e) {
             TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
             selectedTab.setClosable(false);
+            selectedTab.modifiedSinceSaved = true;
+            ToolBarPain.checkTabChanges();
             SnapshotParameters params = new SnapshotParameters();
             params.setFill(Color.TRANSPARENT);         
             WritableImage image = selectedTab.canvas.snapshot(params, null);
@@ -267,6 +297,8 @@ public class ToolBarManager {
         public void handle(MouseEvent e) {
             TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
             selectedTab.setClosable(false);
+            selectedTab.modifiedSinceSaved = true;
+            ToolBarPain.checkTabChanges();
             lineFirstX = e.getX();
             lineFirstY = e.getY();
             selectedTab.previewContext.clearRect(lineFirstX-5,lineFirstY-5,10,10);
@@ -279,6 +311,8 @@ public class ToolBarManager {
         public void handle(MouseEvent e) {  
             TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
             selectedTab.setClosable(false);
+            selectedTab.modifiedSinceSaved = true;
+            ToolBarPain.checkTabChanges();
              SnapshotParameters params = new SnapshotParameters();
             params.setFill(Color.TRANSPARENT);         
             WritableImage image = selectedTab.canvas.snapshot(params, null);
@@ -310,6 +344,8 @@ public class ToolBarManager {
         public void handle(MouseEvent e) {
             TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
             selectedTab.setClosable(false);
+            selectedTab.modifiedSinceSaved = true;
+            ToolBarPain.checkTabChanges();
             SnapshotParameters params = new SnapshotParameters();
             params.setFill(Color.TRANSPARENT);         
             WritableImage image = selectedTab.canvas.snapshot(params, null);
@@ -339,7 +375,7 @@ public class ToolBarManager {
             }
                  catch (NumberFormatException nfe)
             {
-                System.out.println("NumberFormatException: " + nfe.getMessage());
+                PainTFX_2021.logThread.logGeneral("NumberFormatException: " + nfe.getMessage()); 
             }
              default:  // not called in other cases
             break;
@@ -354,6 +390,8 @@ public class ToolBarManager {
         public void handle(MouseEvent e) {
             TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
             selectedTab.setClosable(false);
+            selectedTab.modifiedSinceSaved = true;
+            ToolBarPain.checkTabChanges();
             currentX = e.getX();
             currentY = e.getY();
             
@@ -371,6 +409,8 @@ public class ToolBarManager {
             
             TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
             selectedTab.setClosable(false);
+            selectedTab.modifiedSinceSaved = true;
+            ToolBarPain.checkTabChanges();
             currentX = e.getX();
             currentY = e.getY();
             
@@ -384,6 +424,8 @@ public class ToolBarManager {
         public void handle(MouseEvent e) {
             TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
             selectedTab.setClosable(false);
+            selectedTab.modifiedSinceSaved = true;
+            ToolBarPain.checkTabChanges();
             currentX = e.getX();
             currentY = e.getY();
             cutPasteX2 =currentX;
@@ -406,6 +448,8 @@ public class ToolBarManager {
         public void handle(MouseEvent e) {
             TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
             selectedTab.setClosable(false);
+            selectedTab.modifiedSinceSaved = true;
+            ToolBarPain.checkTabChanges();
             currentX = e.getX();
             currentY = e.getY();
             //make erased area
@@ -420,6 +464,8 @@ public class ToolBarManager {
             //pretend to draw on canvas
              TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
             selectedTab.setClosable(false);
+            selectedTab.modifiedSinceSaved = true;
+            ToolBarPain.checkTabChanges();
             currentX = e.getX();
             currentY = e.getY();
            
@@ -430,7 +476,10 @@ public class ToolBarManager {
             WritableImage image =  selectedTab.canvas.snapshot(params, null);
             selectedTab.previewContext.drawImage(image, 0, 0);
              //make erased area
+            if (copyPasteOn == true){
+            } else{
             selectedTab.previewContext.clearRect(cutPasteX1, cutPasteY1, (int) Math.abs(lineFirstX -  cutPasteX2), (int) Math.abs(lineFirstY -  cutPasteY2)); 
+            }
             selectedTab.previewContext.drawImage(cutPasteImage, currentX, currentY);
       }
     };
@@ -440,6 +489,8 @@ public class ToolBarManager {
             //draw image on canvas
              TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
             selectedTab.setClosable(false);
+            selectedTab.modifiedSinceSaved = true;
+            ToolBarPain.checkTabChanges();
             currentX = e.getX();
             currentY = e.getY();
             selectedTab.previewContext.clearRect(0,0, selectedTab.previewCanvas.getWidth(),selectedTab.previewCanvas.getHeight());
@@ -447,10 +498,15 @@ public class ToolBarManager {
             params.setFill(Color.TRANSPARENT);         
             WritableImage image =  selectedTab.canvas.snapshot(params, null);
             selectedTab.previewContext.drawImage(image, 0, 0);
-
-            selectedTab.previewContext.clearRect(cutPasteX1, cutPasteY1, (int) Math.abs(lineFirstX -  cutPasteX2), (int) Math.abs(lineFirstY -  cutPasteY2)); 
+            
+            if (copyPasteOn == true){
+            } else{
+                selectedTab.previewContext.clearRect(cutPasteX1, cutPasteY1, (int) Math.abs(lineFirstX -  cutPasteX2), (int) Math.abs(lineFirstY -  cutPasteY2)); 
+                 selectedTab.gc.clearRect(cutPasteX1, cutPasteY1, (int) Math.abs(lineFirstX -  cutPasteX2), (int) Math.abs(lineFirstY -  cutPasteY2)); 
+            }
+            //selectedTab.previewContext.clearRect(cutPasteX1, cutPasteY1, (int) Math.abs(lineFirstX -  cutPasteX2), (int) Math.abs(lineFirstY -  cutPasteY2)); 
             selectedTab.previewContext.drawImage(cutPasteImage, currentX, currentY);
-            selectedTab.gc.clearRect(cutPasteX1, cutPasteY1, (int) Math.abs(lineFirstX -  cutPasteX2), (int) Math.abs(lineFirstY -  cutPasteY2)); 
+            //selectedTab.gc.clearRect(cutPasteX1, cutPasteY1, (int) Math.abs(lineFirstX -  cutPasteX2), (int) Math.abs(lineFirstY -  cutPasteY2)); 
             selectedTab.gc.drawImage(cutPasteImage, currentX, currentY);
             selectedTab.previewCanvas.removeEventHandler(MouseEvent.MOUSE_PRESSED, cutPasteStartHandler2 );
             selectedTab.previewCanvas.removeEventHandler(MouseEvent.MOUSE_DRAGGED, cutPasteDragHandler2);
@@ -458,11 +514,15 @@ public class ToolBarManager {
             selectedTab.previewCanvas.addEventHandler(MouseEvent.MOUSE_PRESSED, shapeAndLineStartPosHandler1 );
             selectedTab.previewCanvas.addEventHandler(MouseEvent.MOUSE_DRAGGED, shapeAndLineDragHandler1);
             selectedTab.previewCanvas.addEventHandler(MouseEvent.MOUSE_RELEASED, cutPasteReleaseHandler1);
+            
       }
     };
       
-       
-     public static void drawTool() {
+    /**
+     * Selects relevant draw method based on current tool name
+     * Resets preview Canvas
+     */
+    public static void drawTool() {
          
          TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
          selectedTab.setClosable(false);
@@ -472,8 +532,6 @@ public class ToolBarManager {
         params.setFill(Color.TRANSPARENT);         
         WritableImage image =  selectedTab.canvas.snapshot(params, null);
          selectedTab.previewContext.drawImage(image, 0, 0);
-//selectedTab.previewCanvas = selectedTab.canvas;
-         //selectedTab.previewContext = selectedTab.canvas.getGraphicsContext2D(); 
          
          
         switch (activeCanvasTool) {
@@ -487,6 +545,9 @@ public class ToolBarManager {
             drawRectangle();
             break;
         case "cutPaste":
+            drawCutPasteRectangle();
+            break;
+        case "copyPaste":
             drawCutPasteRectangle();
             break;
         case "rectangleRounded":
@@ -508,7 +569,12 @@ public class ToolBarManager {
         }
 }
 
-     public static void drawCircle(){
+    /**
+     * Calls DrawMath.mathCircle to determine inputs for fillOcal and strokeOval methods.
+     * Checks whether it should just draw on previewContext
+     * Needs to re-add event handlers if copyCanvas is called because it makes a new previewCanvas
+     */
+    public static void drawCircle(){
          TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
             selectedTab.setClosable(false);
 
@@ -534,8 +600,12 @@ public class ToolBarManager {
                
     } }
      
-     
-     public static void drawEllipse(){
+   /**
+     * Calls DrawMath.mathRectangle to determine inputs for fillOcal and strokeOval methods.
+     * Checks whether it should just draw on previewContext
+     * Needs to re-add event handlers if copyCanvas is called because it makes a new previewCanvas
+     */
+    public static void drawEllipse(){
         TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
             selectedTab.setClosable(false);
 
@@ -563,7 +633,12 @@ public class ToolBarManager {
         }
     } 
      
-     public static void drawSquare(){
+     /**
+     * Uses formulas to determine inputs for fillRect and strokeRect methods.
+     * Checks whether it should just draw on previewContext
+     * Needs to re-add event handlers if copyCanvas is called because it makes a new previewCanvas
+     */
+    public static void drawSquare(){
         double x =currentX;
             double y = currentY;
             TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
@@ -620,7 +695,10 @@ public class ToolBarManager {
                         }  
                         }
            
-        public static void drawCutPasteRectangle(){
+    /**
+     * Draws a temporary rectangle to indicate what section was cut
+     */
+    public static void drawCutPasteRectangle(){
         TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
             selectedTab.setClosable(false);
             
@@ -672,7 +750,12 @@ public class ToolBarManager {
     }  
     }
         
-        public static void drawRectangle(){
+    /**
+     * Calls DrawMath.mathRectangle to determine inputs for fillRect and strokeRect methods.
+     * Checks whether it should just draw on previewContext
+     * Needs to re-add event handlers if copyCanvas is called because it makes a new previewCanvas
+     */
+    public static void drawRectangle(){
         TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
             selectedTab.setClosable(false);
            
@@ -714,10 +797,11 @@ public class ToolBarManager {
     }  
     }
     
-            
-            
-            
-            
+    /**
+     * Calls DrawMath.mathPolygon to determine inputs for fillPolygon and strokePolygon methods.
+     * Checks whether it should just draw on previewContext
+     * Needs to re-add event handlers if copyCanvas is called because it makes a new previewCanvas
+     */
     public static void drawPolygon(){
             TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
             selectedTab.setClosable(false);
@@ -744,6 +828,11 @@ public class ToolBarManager {
         }
     }  
     
+    /**
+     * Calls strokeLine with position data to draw on GraphicsContext
+     * Checks whether it should just draw on previewContext
+     * Needs to re-add event handlers if copyCanvas is called because it makes a new previewCanvas
+     */
     public static void drawStraightLine(){
         TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
         if (previewDraw == true) {

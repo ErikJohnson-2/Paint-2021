@@ -9,13 +9,13 @@ import java.util.Stack;
 import javafx.scene.image.WritableImage;
 
 /**
-* <h1>UndoRedo</h1>
+* <h1>Maintains stacks to revert canvas changes</h1>
 * Creates two stacks for a Tab
 * Provides methods for push and pop
 *
 * @author  Erik Johnson
-* @version 1.4
-* @since   2021-10-07
+* @version 2.0
+* @since   2021-10-19
 */
 
 public class UndoRedo {
@@ -23,14 +23,17 @@ public class UndoRedo {
      final Stack<WritableImage> redoStack ;
      final Stack<WritableImage> undoStack ; 
     
-public UndoRedo (){
+    /**
+     *
+     */
+    public UndoRedo (){
         this.undoStack = new Stack<>();
         this.redoStack = new Stack<>();
     
 }
     
     /**
-* Changes occurred, push previous data to undo
+* Changes occurred, push previous data to undoStack
      * @param image WritableImage 
 
 */
@@ -48,9 +51,6 @@ public void pushChanges(WritableImage image) {
 public WritableImage popUndo() {
         //pop undo and load that data
         WritableImage data = this.undoStack.pop();
-        //push data from undo to redo
-        this.redoStack.push(data);
-         //return img?
         return data;
     } 
 
@@ -60,14 +60,12 @@ public WritableImage popUndo() {
 * @return data as a WritableImage from the redoStack
 */  
 public WritableImage popRedo() {
-        //pop undo and load that data
+        //pop redo and load that data
         WritableImage data = this.redoStack.pop();
-        //push data from undo to redo
-        this.undoStack.push(data);
         return data;
     }
 /**
-* Push image data to redo
+* Push image data to redoStack
      * @param image Writable Image from undo
 */ 
 public void pushRedo(WritableImage image) {
@@ -78,10 +76,11 @@ public void pushRedo(WritableImage image) {
     }
 
 /**
-* Push image data to undo
+* Push image data to undoStack
      * @param image Writable Image from redo or ChangesMade
-     * @deprecated This is identical to pushChanges?
+     
 */ 
+//shouldn't this be deprecated/refactored?
 public void pushUndo(WritableImage image) {   
         //take canvas data
         //push data to undo 

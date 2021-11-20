@@ -2,15 +2,13 @@ package pain.t.fx_2021;
 
 //imports
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Platform;
-import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
@@ -18,7 +16,6 @@ import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Menu;
@@ -34,24 +31,46 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.paint.Color;
 import javafx.scene.web.WebView;
-import javafx.stage.FileChooser;
-import javax.imageio.ImageIO;
 import javafx.stage.Stage;
 import static pain.t.fx_2021.PainTFX_2021.tabPane;
 
+/**
+ <h1>Layout and Handlers for menu</h1>
+* Extension of MenuBar that creates menus, menuItems, and event handlers.
+* Has no variables excpet for icon 
+* Calls from OpenAndSaveMethods in some event handlers.
+*
+* @author  Erik Johnson
+* @version 1.5
+* @since   2021-10-16
+ */
 public class MenuPain extends MenuBar{
     
     //THIS CLASS CONTAINS CODE FOR CREATING A MENU AND EVENT HANDLERS FOR ALL MENU ITEMS
     //public static final String APP_ICON = "http://icons.iconarchive.com/icons/deleket/soft-scraps/128/Zoom-icon.png";
     // public static final String CLOSE_ICON = "http://icons.iconarchive.com/icons/deleket/soft-scraps/24/Button-Close-icon.png";
-  public static final String ZOOM_RESET_ICON = "http://icons.iconarchive.com/icons/deleket/soft-scraps/24/Zoom-icon.png";
-  public static final String ZOOM_OUT_ICON = "http://icons.iconarchive.com/icons/deleket/soft-scraps/24/Zoom-Out-icon.png";
-  public static final String ZOOM_IN_ICON = "http://icons.iconarchive.com/icons/deleket/soft-scraps/24/Zoom-In-icon.png";
- 
 
+    /**
+     * Basic text icon for shortcut
+     */
+  public static final String ZOOM_RESET_ICON = "http://icons.iconarchive.com/icons/deleket/soft-scraps/24/Zoom-icon.png";
+
+    /**
+     * Basic text icon for shortcut
+     */
+    public static final String ZOOM_OUT_ICON = "http://icons.iconarchive.com/icons/deleket/soft-scraps/24/Zoom-Out-icon.png";
+
+    /**
+     * Basic text icon for shortcut
+     */
+    public static final String ZOOM_IN_ICON = "http://icons.iconarchive.com/icons/deleket/soft-scraps/24/Zoom-In-icon.png";
   
-  
-  
+    /**
+     * Constructor for MenuPain, only called in PainTFX_2021.
+     * Creates and initializes all menu data. Contains most event handlers
+     * Some shared methods are called from OpenAndSaveMethods
+     * @param primaryStage
+     */
     public MenuPain(Stage primaryStage) {
     
     //initialize Menus for Menubar
@@ -61,6 +80,8 @@ public class MenuPain extends MenuBar{
     Menu help = new Menu("Help");
     Menu undoRedo = new Menu("Undo/Redo");
     Menu autoSave = new Menu("AutoSave");
+    
+
     
     // intialize menuitems for Menus
     MenuItem open1 = new MenuItem("Open File In Current Tab");
@@ -85,7 +106,9 @@ public class MenuPain extends MenuBar{
     MenuItem support1 = new MenuItem("Online Support");
     MenuItem release1 = new MenuItem("Release Notes");
     
-    MenuItem autoSave1 = new MenuItem("Change Timer Length");
+    MenuItem autoSaveChange = new MenuItem("Change Timer Length");
+    MenuItem autoSaveHide = new MenuItem("Hide Timer");
+    MenuItem autoSaveShow = new MenuItem("Show Timer");
        
     // add menu items to file menu
     file.getItems().add(open1);
@@ -115,7 +138,9 @@ public class MenuPain extends MenuBar{
     exit.getItems().add(exit1);
     
     //add menu items to autosave menu
-    autoSave.getItems().add(autoSave1);
+    autoSave.getItems().add(autoSaveChange);
+    autoSave.getItems().add(autoSaveHide);
+    autoSave.getItems().add(autoSaveShow);
     
     // add menus to this menubar object
     this.getMenus().add(file);
@@ -125,10 +150,12 @@ public class MenuPain extends MenuBar{
     this.getMenus().add(help);
     this.getMenus().add(exit);
     
+    
+    
     //EVENT HANDLERS BELOW
     
     //eH for AutoSave Timer change
-    autoSave1.setOnAction(new EventHandler<ActionEvent>() {
+    autoSaveChange.setOnAction(new EventHandler<ActionEvent>() {
     @Override
             public void handle(ActionEvent e) {
                 //popup a dialog that the user can input data to
@@ -137,26 +164,48 @@ public class MenuPain extends MenuBar{
                 // create a text input dialog
                 TextInputDialog td = new TextInputDialog();
                
-                td.setTitle("Change Timer Length in Whole Numbers");
-                td.getDialogPane().setContentText("New Timer Length:");
+                td.setTitle("Change Autosave Timer Length in Whole Numbers");
+                td.getDialogPane().setContentText("New Timer Length of Seconds):");
                 // show the text input dialog
                 td.showAndWait();
                 TextField inputTimerField = td.getEditor();
                 try{
                 inputTimer = Double.valueOf(inputTimerField.getText());
-                System.out.print(inputTimer);
-                TabPain.timerLoop = (int) inputTimer;
+                
+                PainTFX_2021.logThread.logGeneral("New input for timer length:" + inputTimer);
                 TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
                 selectedTab.timer.cancel();
+                
+                if (inputTimer < 5 || inputTimer > 60) {
+                    //selectedTab.timerLoop = 5000;
+                } else {
+                    selectedTab.timerLoop = inputTimer * 1000;
+                } 
                 selectedTab.birthTimer();
-                } catch (Exception d) {
-                    
+
+                 try {
+                    File newFile = new File(System.getProperty("user.dir")+ File.separator+ "AutoSaves" + File.separator + "Timer.txt");
+                    FileWriter myWriter = new FileWriter(newFile);
+                    myWriter.write(inputTimerField.getText());
+                    myWriter.close();
+                } catch (IOException fail) {
+                    PainTFX_2021.logThread.logGeneral("Failed to write to timer file");
+                }
+                } catch (Exception d) {      
                 }
                
             }
     });
-    //eH for Undo, push selected tab's canvas to redo and pop from undo
-    undoMenuItem.setOnAction(new EventHandler<ActionEvent>() {
+    
+     autoSaveHide.setOnAction((ActionEvent event) -> {
+         PainTFX_2021.timerHide();
+    });
+         
+    autoSaveShow.setOnAction((ActionEvent event) -> {
+        PainTFX_2021.timerShow();
+    });
+    
+            undoMenuItem.setOnAction(new EventHandler<ActionEvent>() {
       @Override
       public void handle(ActionEvent event) {
           TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
@@ -166,9 +215,9 @@ public class MenuPain extends MenuBar{
             WritableImage image = selectedTab.canvas.snapshot(params, null);
               selectedTab.undoRedoData.pushRedo(image);
                selectedTab.redoUndoCanvasInit(selectedTab.undoRedoData.popUndo());
-               System.out.print("undo");
+               
           } else {
-              System.out.print("undo_failed");
+              
           }
       }
     });
@@ -183,9 +232,9 @@ public class MenuPain extends MenuBar{
             WritableImage image = selectedTab.canvas.snapshot(params, null);
               selectedTab.undoRedoData.pushUndo(image);
               selectedTab.redoUndoCanvasInit(selectedTab.undoRedoData.popRedo());
-              System.out.print("redo");
+              
           } else {
-              System.out.print("redo_failed");
+              
           }
       }
     });
@@ -202,8 +251,6 @@ public class MenuPain extends MenuBar{
           TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
           selectedTab.previewCanvas.setScaleX(1);
           selectedTab.previewCanvas.setScaleY(1);
-        //group.setScaleX(1);
-        //group.setScaleY(1);
       }
     });
     
@@ -218,8 +265,6 @@ public class MenuPain extends MenuBar{
           TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
           selectedTab.previewCanvas.setScaleX(selectedTab.previewCanvas.getScaleX() * 1.5);
           selectedTab.previewCanvas.setScaleY(selectedTab.previewCanvas.getScaleY() * 1.5);
-        //group.setScaleX(group.getScaleX() * 1.5);
-        //group.setScaleY(group.getScaleY() * 1.5);
       }
     });
    
@@ -236,19 +281,9 @@ public class MenuPain extends MenuBar{
            TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
           selectedTab.previewCanvas.setScaleX(selectedTab.previewCanvas.getScaleX() * 1 / 1.5);
           selectedTab.previewCanvas.setScaleY(selectedTab.previewCanvas.getScaleY() * 1 / 1.5);
-          //group.setScaleX(group.getScaleX() * 1 / 1.5);
-          //group.setScaleY(group.getScaleY() * 1 / 1.5);
       }
     });
-    //test
-    
-    
-    
-    
-    
-    
-    
- 
+
    //eventHandler for close menuItem
         exit1.setOnAction(new EventHandler<ActionEvent>() {
             @Override
@@ -260,16 +295,13 @@ public class MenuPain extends MenuBar{
                 boolean tabsClosable = true;
 
                 for (Tab var : tabPane.getTabs()) { 
-                    System.out.print("h");
-                    var.setClosable(true);
                     if (var.isClosable() == true) {
                     } else {
                         tabsClosable = false;
                     }
                 }
-                
                 //if changes were logged in tabs then make user confirm in popup
-                if (tabsClosable == true)  
+                if (tabsClosable == false)  
                 {
                     //popup dialog that asks user to select cancel or close
                     Alert alert = new Alert(AlertType.CONFIRMATION);
@@ -281,9 +313,7 @@ public class MenuPain extends MenuBar{
                     ButtonType buttonTypeOne = new ButtonType("Eh Just Close");
                     ButtonType buttonTypeTwo = new ButtonType("Ugh. Close");
                     ButtonType buttonTypeCancel = new ButtonType("Cancel", ButtonData.CANCEL_CLOSE);
-
                     alert.getButtonTypes().setAll(buttonTypeOne, buttonTypeTwo, buttonTypeCancel);
-
                     Optional<ButtonType> result = alert.showAndWait();
                     if (result.get() == buttonTypeOne){
                     // ... user chose "Eh Just Close"
@@ -292,7 +322,6 @@ public class MenuPain extends MenuBar{
                          TabPain thisTab = (TabPain) var;
                          thisTab.timerEnd = true;
                          thisTab.timer.cancel();
-                    
                     }
                     Platform.exit();
                     } else if (result.get() == buttonTypeTwo) {
@@ -303,11 +332,7 @@ public class MenuPain extends MenuBar{
                          TabPain thisTab = (TabPain) var;
                          thisTab.timerEnd = true;
                          thisTab.timer.cancel();
-                    
                     }
-                     
-                     
-                     
                      Platform.exit();
                     } else {
                      // user chose "Cancel" or closed the dialog
@@ -318,7 +343,6 @@ public class MenuPain extends MenuBar{
                          TabPain thisTab = (TabPain) var;
                          thisTab.timerEnd = true;
                          thisTab.timer.cancel();
-                    
                     }
                     PainTFX_2021.timerEnd = true;
                     Platform.exit();
@@ -327,92 +351,15 @@ public class MenuPain extends MenuBar{
         });
         
     //eventHandler for fileOpen menuItem    
-        open1.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent e) {
-                //user selects a file with chosen types
-                FileChooser fileChooser = new FileChooser();
-                fileChooser.setTitle("Open Image File");
-                fileChooser.getExtensionFilters().addAll(
-                        new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.gif"));
-                FileInputStream imageStream;
-                
-                //try to use file the user selects, functionality seems suspect/superfluous
-                //this keeps memory of fileDest and outFile for future save functions
-                //passes image data and image to canvas inti which adds it to UX
-                try {
-                    File file = fileChooser.showOpenDialog(primaryStage);
-                    String fileDest = file.getPath();
-                    
-                    TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
-                    selectedTab.fileDest = file.getPath();
-                    selectedTab.outFile = file;
-                    imageStream = new FileInputStream(fileDest);
-                    Image image = new Image(imageStream);
-                    double imageWidth = image.getWidth();
-                    double imageHeight = image.getHeight();
-                    selectedTab.canvasInit(imageWidth, imageHeight, image);
-                   
-                } catch (FileNotFoundException ex) {
-                    //NEW ERROR CODE NEEDED
-                    Logger.getLogger(PainTFX_2021.class.getName()).log(Level.SEVERE, null, e);
-                    ButtonType exitButtonType = new ButtonType("Exit", ButtonBar.ButtonData.OK_DONE);
-                    Alert alert = new Alert(Alert.AlertType.ERROR);
-                    alert.getDialogPane().getButtonTypes().add(exitButtonType);
-                    boolean disabled = false; // computed based on content of text fields, for example
-                    alert.getDialogPane().lookupButton(exitButtonType).setDisable(disabled);
-                    alert.setTitle("Error");
-                    alert.setHeaderText("File Error");
-                    alert.setContentText("File not Found");
-                    
-                }
-            }
-        });
+        open1.setOnAction((ActionEvent event) -> {
+            PainTFX_2021.openSaveRunner.fileChooseOpen(event);
+    } 
+    );
         
          //eventHandler for fileOpen in new tab menuItem    
-        open2.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent e) {
-                //user selects a file with chosen types
-                FileChooser fileChooser = new FileChooser();
-                fileChooser.setTitle("Open Image File");
-                fileChooser.getExtensionFilters().addAll(
-                        new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.gif"));
-                FileInputStream imageStream;
-                
-                //try to use file the user selects, functionality seems suspect/superfluous
-                //this keeps memory of fileDest and outFile for future save functions
-                //passes image data and image to canvas inti which adds it to UX
-                try {
-                    File file = fileChooser.showOpenDialog(primaryStage);
-                    String fileDest = file.getPath();
-                    
-                    TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
-                    selectedTab.fileDest = file.getPath();
-                    selectedTab.outFile = file;
-                    imageStream = new FileInputStream(fileDest);
-                    Image image = new Image(imageStream);
-                    double imageWidth = image.getWidth();
-                    double imageHeight = image.getHeight();
-                    TabPain tab = new TabPain();
-                    tab.canvasInit(imageWidth, imageHeight, image);
-                    tabPane.getTabs().add(tab);
-                   
-                } catch (FileNotFoundException ex) {
-                    //new error
-                    Logger.getLogger(PainTFX_2021.class.getName()).log(Level.SEVERE, null, e);
-                    ButtonType exitButtonType = new ButtonType("Exit", ButtonBar.ButtonData.OK_DONE);
-                    Alert alert = new Alert(Alert.AlertType.ERROR);
-                    alert.getDialogPane().getButtonTypes().add(exitButtonType);
-                    boolean disabled = false; // computed based on content of text fields, for example
-                    alert.getDialogPane().lookupButton(exitButtonType).setDisable(disabled);
-                    alert.setTitle("Error");
-                    alert.setHeaderText("File Error");
-                    alert.setContentText("File not Found");
-                    
-                }
-            }
-        });
+        open2.setOnAction((ActionEvent event) -> {
+            PainTFX_2021.openSaveRunner.fileChooseOpenNewTab(event);
+    });
         
         //eH for open3 "Open Blank Canvas In New Tab");
         open3.setOnAction(new EventHandler<ActionEvent>() {
@@ -422,134 +369,22 @@ public class MenuPain extends MenuBar{
                   tabPane.getTabs().add(tab);
             }
         });
-        
         //eH for open4 "Open Public Domain Painting In New Tab"
-        open4.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent e) {
-                //user selects a file with chosen types
-                
-                String location = "File Didn't Load";
-              try {
-                  location = new File(
-                          System.getProperty("user.dir") + File.separator + "MA.jpg"
-                  ).toURI().toURL().toExternalForm();
-              } catch (MalformedURLException ex) {
-                  Logger.getLogger(MenuPain.class.getName()).log(Level.SEVERE, null, ex);
-              }
-                
-                System.out.print("that worked");
-                //this is not extendable!!
-                location = "/I:/cs250/Pain(t)FX_2021/MA.jpg";
-                
-               
-  try {
-                    FileInputStream imageStream = new FileInputStream(location);
-                    Image image = new Image(imageStream);
-                    double imageWidth = image.getWidth();
-                    double imageHeight = image.getHeight();
-                    TabPain tab = new TabPain();
-                    tab.canvasInit(imageWidth, imageHeight, image);
-                    tabPane.getTabs().add(tab);
-                   
-                } catch (FileNotFoundException ex) {
-                    //new error
-                    Logger.getLogger(PainTFX_2021.class.getName()).log(Level.SEVERE, null, e);
-                    ButtonType exitButtonType = new ButtonType("Exit", ButtonBar.ButtonData.OK_DONE);
-                    Alert alert = new Alert(Alert.AlertType.ERROR);
-                    alert.getDialogPane().getButtonTypes().add(exitButtonType);
-                    boolean disabled = false; // computed based on content of text fields, for example
-                    alert.getDialogPane().lookupButton(exitButtonType).setDisable(disabled);
-                    alert.setTitle("Error");
-                    alert.setHeaderText("File Error");
-                    alert.setContentText("File not Found");
-                    
-                }
-            }
-        });
-        
-        
-        
-        
-        
+        open4.setOnAction((ActionEvent event) -> {
+            PainTFX_2021.openSaveRunner.filePubDomOpen(event);
+    });
         //eH for file/saveAs, creates new scene and adds menubar, sets fileDest,
         //takes snapshot of canvas and saves it to fileDest
         //closes by changing scene and moving menubar
-        save2.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent e) {
-                TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
-                Canvas canvas = selectedTab.canvas;
-                // user can type file name and selct path
-                FileChooser fileChooser = new FileChooser();
-                fileChooser.setTitle("Save Image");
-                fileChooser.getExtensionFilters().addAll(
-                        new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.gif"));
-                File outFile = fileChooser.showSaveDialog(primaryStage);
-                //intialize new Writable image and transer canvas data
-                WritableImage wImage = new WritableImage(
-                        (int) canvas.getWidth(),
-                        (int) canvas.getHeight());
-                canvas.snapshot(null, wImage);
-                // Write wImage to file system as an image
-                if (outFile != null) {
-                    //remember valid files for future save functionality
-                    selectedTab.outFile = outFile;
-                    selectedTab.fileDest = outFile.getName();
-                    //get file data from user type
-                    String fileDest = outFile.getName();
-                    String extension = fileDest.substring(1 + fileDest.lastIndexOf(".")).toLowerCase();
-                    //try to save file in memory, print message if failed
-                    // ####### THIS NEEDS A BETTER ERROR MESSAGE PLEASE
-                        try {
-                            ImageIO.write(SwingFXUtils.fromFXImage(wImage,
-                                    null), extension, outFile);
-                            selectedTab.setClosable(true);
-                            PainTFX_2021.logSave(true);
-                        } catch (IOException ex) {
-                            System.out.println(ex.getMessage());
-                            PainTFX_2021.logSave(false);
-                        } 
-                }
-            }
-        });
+        save2.setOnAction((ActionEvent event) -> {
+            PainTFX_2021.openSaveRunner.saveDestChosen(event);
+    });
 
         //eH for file/save, uses same method as file/saveAs with fileDest already set by open or saveAs
         //should have an error message that states if a file is unsaved
-        save1.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent e) {
-                TabPain selectedTab = (TabPain) tabPane.getSelectionModel().getSelectedItem();
-                Canvas canvas = selectedTab.canvas;
-                File outFile = selectedTab.outFile;
-                
-                try {
-                    WritableImage wImage = new WritableImage(
-                            (int) canvas.getWidth(),
-                            (int) canvas.getHeight());
-                    canvas.snapshot(null, wImage);
-                    System.out.print(outFile.toString());
-                    //default saves as png, could modify this in future to take advantage of extensions?
-                    ImageIO.write(SwingFXUtils.fromFXImage(wImage, null),
-                            "png", outFile);
-                     
-                     selectedTab.setClosable(true);
-                     PainTFX_2021.logSave(true);
-                } catch (Exception ex) {
-                    //error message dialog box
-                    Alert alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setTitle("Save Alert");
-                alert.setHeaderText("Save was Unsuccessful");
-                String s = "Try using save as first, no file name or directory has been set";
-                alert.setContentText(s);
-                alert.show();
-                PainTFX_2021.logSave(false);
-                }
-            //}
-            }
-        });
-        
-        
+        save1.setOnAction((ActionEvent event) -> {
+            PainTFX_2021.openSaveRunner.saveGeneric(event);
+    });
         //eH for image/resize, will prompt user for length and width of new image in two seperate popups
         resize1.setOnAction(new EventHandler<ActionEvent>() {
             @Override
@@ -567,13 +402,13 @@ public class MenuPain extends MenuBar{
                 td.showAndWait();
                 TextField inputHeightField = td.getEditor();
                 inputHeight = Double.valueOf(inputHeightField.getText());
-                System.out.print(inputHeight);
+                PainTFX_2021.logThread.logGeneral("Change image height input:" + inputHeight);
                 //reset text input dialog for width
                 td.getDialogPane().setContentText("New Width:");
                 td.showAndWait();
                 TextField inputWidthField = td.getEditor();
                 inputWidth = Double.valueOf(inputWidthField.getText());
-                System.out.print(inputWidth);
+                 PainTFX_2021.logThread.logGeneral("Change image width input:" + inputWidth);
                 
                 WritableImage wImage = new WritableImage(
                             (int) selectedTab.canvas.getWidth(),
@@ -581,12 +416,10 @@ public class MenuPain extends MenuBar{
 
                 selectedTab.canvas.snapshot(null, wImage);             
                 selectedTab.setClosable(false);       
-              
               //remove prior data and initalize canvas, is not using built in TabPain code
               //should get own function in tabPain
               //problem is gc.draw image passing extra paramters here
               //selectedTab.canvasInit(selectedTab.canvas.getWidth(), selectedTab.canvas.getHeight(), wImage);
-              
               //code below condensed to canvasInit
                 selectedTab.sp.getChildrenUnmodifiable().remove(selectedTab.canvas);
                 selectedTab.canvas = new Canvas(inputWidth, inputHeight);
@@ -594,8 +427,8 @@ public class MenuPain extends MenuBar{
                 //place image data on graphics context
                 selectedTab.gc.drawImage(wImage, 0, 0, inputWidth, inputHeight);
                  //built in padding for testing
-                 SnapshotParameters params = new SnapshotParameters();
-                  params.setFill(Color.TRANSPARENT);         
+                SnapshotParameters params = new SnapshotParameters();
+                params.setFill(Color.TRANSPARENT);         
                 WritableImage image = selectedTab.canvas.snapshot(params, null);
                 Double imageW = selectedTab.canvas.getWidth();
                 Double imageH = selectedTab.canvas.getHeight();
@@ -603,11 +436,6 @@ public class MenuPain extends MenuBar{
                 selectedTab.previewContext = selectedTab.previewCanvas.getGraphicsContext2D();
                 selectedTab.previewContext.drawImage(image, 0, 0);
                 selectedTab.sp.setContent(selectedTab.previewCanvas);
-                 
-                 
-                 
-               // selectedTab.sp.setMaxSize(inputWidth+20, inputHeight+20);
-                //selectedTab.sp.setContent(selectedTab.canvas);
             }
         });
 
@@ -619,7 +447,7 @@ public class MenuPain extends MenuBar{
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
                 alert.setTitle("About");
                 alert.setHeaderText("Information Alert");
-                String s = "Product Version: Pain(t)FX 2.0.0\n"
+                String s = "Product Version: Pain(t)FX 2.0\n"
                         + "Java JDK 8\n"
                         + "Compiled on Netbeans IDE 12.0\n"
                         + "\n";
@@ -634,7 +462,7 @@ public class MenuPain extends MenuBar{
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
                 alert.setTitle("Online Docs and Support");
                 alert.setHeaderText("Information Alert");
-                String s = "Youtube Demo: https://youtu.be/EN9vIy3C-lI \n "
+                String s = "Youtube Demo: https://youtu.be/HFjoSMA_vVY \n "
                         + "Github Code: https://github.com/ErikJohnson-2/Paint-2021 \n"
                         + "Oracle Documentation: https://docs.oracle.com/ \n"
                         + "Email: erik.johnson2@valpo.edu \n";
@@ -655,7 +483,8 @@ public class MenuPain extends MenuBar{
                         + "\n" +"Each tab has its own image and file location."
                         + "\n" +"If you forget to save, check the Paint Folder for an Autosave."
                         + "\n" +"Further information about saves can be found in the logs."
-                        + "\n" +"The Auto-Save timer can be modified depending on how often you want changes saved."
+                        + "\n" +"The Auto-Save timer can be modified or hidden depending on how often you want changes saved."
+                        + "\n" +"The timer persists from session to session."
                         + "";
                 alert.setContentText(s);
                 alert.show();
@@ -674,9 +503,8 @@ public class MenuPain extends MenuBar{
                           System.getProperty("user.dir") + File.separator + "release_notes_Paint.txt"
                   ).toURI().toURL().toExternalForm();
               } catch (MalformedURLException ex) {
-                  Logger.getLogger(MenuPain.class.getName()).log(Level.SEVERE, null, ex);
+                   PainTFX_2021.logThread.logGeneral("Release notes did not load");
               }
-        System.out.println(location);
         WebView webView = new WebView();
         webView.getEngine().load(location);
         Scene scene = new Scene(webView);

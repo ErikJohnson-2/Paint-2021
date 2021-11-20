@@ -8,7 +8,7 @@ package pain.t.fx_2021;
 import java.util.ArrayList;
 
 /**
-* <h1>DrawMath</h1>
+* <h1>Encapsulates math for some drawing tools</h1>
 * Methods for Draw Tools
 * Abstracts and cleans original implementation
 *
